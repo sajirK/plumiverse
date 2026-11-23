@@ -17,6 +17,7 @@ export const fr = {
     yes: "Oui",
     no: "Non, un nouveau profil",
   },
+  me: { title: "Mon profil", avatar: "Mon animal", name: "Mon prénom", age: "Mon âge", lang: "Ma langue", learn: "Les langues que j'apprends", switch: "Changer de joueur", done: "C'est bon !", saved: "C'est enregistré !" },
   who: { title: "Qui joue ?", add: "Ajouter un joueur", full: "6 profils au maximum." },
   home: {
     hi: "Bonjour {name} !",

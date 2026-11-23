@@ -85,3 +85,17 @@ export const root = () => document.getElementById("app")!;
 
 /** Titre de l'onglet. */
 export const setTitle = (s?: string) => { document.title = s ? `${s} · ${t("app.name")}` : `${t("app.name")} — ${t("app.tagline")}`; };
+
+/** Change la langue du profil courant (et de la page) puis recharge dans la bonne langue. */
+export async function switchLanguage(l: Lang, hash = location.hash || "#/home", updateProfile = true) {
+  const p = updateProfile ? state.current : null;
+  if (p) {
+    p.uiLang = l;
+    p.learning = p.learning.filter((x) => x !== l);
+    if (!p.learning.length) p.learning = [l === "en" ? "es" : "en"];
+    await saveProfile(p);
+  }
+  try { localStorage.setItem("plumiverse.lang", l); } catch { /* rien */ }
+  location.href = `${import.meta.env.BASE_URL}${l}/${hash}`;
+}
+

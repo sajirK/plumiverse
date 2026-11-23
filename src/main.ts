@@ -7,6 +7,7 @@ import { onboarding } from "./ui/screens/onboarding";
 import { who, home, trophies } from "./ui/screens/home";
 import { map, play } from "./ui/screens/play";
 import { parent, parentProfile, parentFamily } from "./ui/screens/parent";
+import { me } from "./ui/screens/me";
 import { loadManifest, unlockAudio } from "./audio/voice";
 import { LANGS } from "./core/types";
 
@@ -14,6 +15,7 @@ route(/^\/start$/, onboarding);
 route(/^\/who$/, who);
 route(/^\/home$/, home);
 route(/^\/trophies$/, trophies);
+route(/^\/me$/, me);
 route(/^\/game\/([^/?]+)/, map);
 route(/^\/play\/([^/?]+)(?:\/([^/?]+))?/, play);
 route(/^\/parent\/p\/([^/?]+)/, parentProfile);

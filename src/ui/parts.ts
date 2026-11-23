@@ -4,7 +4,7 @@ import { t, ui } from "../core/i18n";
 import { playerLevel, streakAlive } from "../core/progress";
 import { bandOf, displayName } from "../core/profile";
 import { h } from "./dom";
-import { go, state } from "./app";
+import { go, state, switchLanguage } from "./app";
 import { sfx } from "../audio/sfx";
 
 /** Lien LinkedIn de l'auteur (à confirmer). */
@@ -20,7 +20,16 @@ export function stars(n: number, max = 3): HTMLElement {
 }
 
 export function footer(): HTMLElement {
-  const langs = (["fr", "en", "de", "es"] as const).map((l) => h("a", { href: `${import.meta.env.BASE_URL}${l}/`, hreflang: l, class: l === state.pageLang ? "on" : "" }, l.toUpperCase()));
+  // changer de langue ici change aussi la langue du joueur (sinon on serait renvoyé dans sa langue)
+  const langs = (["fr", "en", "de", "es"] as const).map((l) => {
+    const a = h("a", { href: `${import.meta.env.BASE_URL}${l}/`, hreflang: l, class: l === state.pageLang ? "on" : "" }, l.toUpperCase());
+    a.addEventListener("click", (e) => { e.preventDefault(); if (l === state.pageLang) return;
+      // sur « Qui joue ? », le premier lancement ou l'espace parent : seulement la langue de la page
+      const shared = /^#\/(who|start|parent)/.test(location.hash) || !location.hash || location.hash === "#/";
+      void switchLanguage(l, location.hash || "#/", !shared);
+    });
+    return a;
+  });
   return h("footer", { class: "foot" },
     h("span", {}, `${t("app.madeBy")} Sajir Khenissi · `),
     h("a", { href: LINKEDIN, target: "_blank", rel: "noopener" }, "LinkedIn"),
@@ -49,8 +58,8 @@ export function playerHeader(p: Profile, opts: { back?: string } = {}): HTMLElem
   const little = band === "3-5";
   const left = opts.back
     ? h("button", { class: "round-btn", "aria-label": t("parent.back"), onclick: () => { sfx.tap(); go(opts.back!); } }, "←")
-    : h("button", { class: "avatar-btn", "aria-label": t("home.switchPlayer"), onclick: () => { sfx.tap(); go("#/who"); } }, p.avatar);
-  const info = h("div", { class: "who-info" },
+    : h("button", { class: "avatar-btn", "aria-label": t("me.title"), onclick: () => { sfx.tap(); go("#/me"); } }, p.avatar);
+  const info = h("button", { class: "who-info", "aria-label": t("me.title"), onclick: () => { sfx.tap(); go("#/me"); } },
     h("div", { class: "who-name" }, displayName(p)),
     little ? null : h("div", { class: "xp" }, h("span", { class: "xp-lv" }, t("home.level", { n: lv.level })), h("span", { class: "xp-bar" }, h("span", { style: { width: `${Math.round((lv.into / lv.need) * 100)}%` } }))),
   );

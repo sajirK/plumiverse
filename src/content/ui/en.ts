@@ -17,6 +17,7 @@ export const en: Ui = {
     yes: "Yes",
     no: "No, a new profile",
   },
+  me: { title: "My profile", avatar: "My animal", name: "My name", age: "My age", lang: "My language", learn: "Languages I'm learning", switch: "Change player", done: "Done!", saved: "Saved!" },
   who: { title: "Who's playing?", add: "Add a player", full: "6 profiles at most." },
   home: {
     hi: "Hello {name}!",
