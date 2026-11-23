@@ -82,3 +82,9 @@ export const sfx = {
   star: (i: number) => tone(784 * Math.pow(1.26, i), 0.3, "sine", 0.2),
   unlock: () => { tone(392, 0.2, "triangle", 0.15); tone(587, 0.3, "triangle", 0.15, 0.12); tone(784, 0.4, "triangle", 0.15, 0.26); },
 };
+
+/** Pour les instruments (Piano) : le contexte audio et la sortie (null si le son est coupé). */
+export function audioOut(): { ac: AudioContext; out: AudioNode } | null {
+  const a = ac();
+  return a && master ? { ac: a, out: master } : null;
+}

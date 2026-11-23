@@ -95,7 +95,8 @@ describe("cours de langue", () => {
 
 describe("parcours des jeux", () => {
   const ctxFor = (age: number) => ({ profile: createProfile({ age, uiLang: "fr", learning: ["en", "de", "es"] }), age, band: (age <= 5 ? "3-5" : age <= 8 ? "6-8" : age <= 11 ? "9-11" : "12-14") as "3-5", lang: "fr" as Lang });
-  const tracks: [string, Track][] = GAMES.map((g) => [g.id, g.track(ctxFor(8))]);
+  const tracks: [string, Track][] = GAMES.filter((g) => !g.free).map((g) => [g.id, g.track(ctxFor(8))]);
+  test("jeux libres : un seul niveau, une vraie fin (bouton vert)", () => { for (const g of GAMES.filter((x) => x.free)) { const t = g.track(ctxFor(8)); expect(t.chapters).toHaveLength(1); expect(t.chapters[0].levels).toHaveLength(1); } });
   test.each(tracks)("%s : identifiants uniques, une épreuve à la fin de chaque chapitre", (_id, trk) => {
     const ids = trk.chapters.flatMap((c) => c.levels.map((l) => l.id));
     expect(new Set(ids).size).toBe(ids.length);

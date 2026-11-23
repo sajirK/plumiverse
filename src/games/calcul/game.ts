@@ -3,7 +3,8 @@ import { L } from "../../core/types";
 import type { GameDef } from "../types";
 import { h } from "../../ui/dom";
 import { sfx } from "../../audio/sfx";
-import { TRACK, question, choices, spoken, type Gen } from "./logic";
+import { TRACK, question, choices, spoken, spokenResult, type Gen } from "./logic";
+import { numberWords } from "../../core/numwords";
 
 export const calculGame: GameDef = {
   id: "calcul",
@@ -37,8 +38,16 @@ export const calculGame: GameDef = {
     const wrap = h("div", { class: "ca-wrap" });
     round.stage.appendChild(wrap);
     const card = h("div", { class: "ca-card" });
-    if (q.objects) card.append(h("div", { class: "ca-objects" }, h("span", {}, q.objects.e.repeat(q.objects.a)), h("b", {}, "+"), h("span", {}, q.objects.e.repeat(q.objects.b))));
-    card.append(h("div", { class: "ca-q" }, q.text.includes("?") ? q.text : `${q.text} = ?`));
+    if (q.objects) {
+      // comme en V2 : on touche les objets pour les compter, la voix compte avec l'enfant
+      let counted = 0;
+      const obj = () => { const s = h("button", { class: "ca-obj", "aria-label": q.objects!.e }, q.objects!.e); s.onclick = () => { if (s.classList.contains("counted") || round.ended) return; s.classList.add("counted"); counted++; sfx.step(Math.min(11, counted - 1)); round.say(numberWords(counted, ctx.lang)); }; return s; };
+      card.append(h("div", { class: "ca-objects" }, h("div", { class: "ca-grp" }, ...Array.from({ length: q.objects.a }, obj)), h("b", {}, "+"), h("div", { class: "ca-grp add" }, ...Array.from({ length: q.objects.b }, obj))));
+    }
+    const qEl = h("div", { class: "ca-q" }, q.text.includes("?") ? q.text : `${q.text} = ?`);
+    card.append(qEl);
+    const reveal = () => { qEl.innerHTML = ""; qEl.append(q.text.includes("?") ? q.text.replace("?", String(q.answer)) : `${q.text} = `, ...(q.text.includes("?") ? [] : [h("span", { class: "ca-ok" }, String(q.answer))])); };
+    const result = spokenResult(q, ctx.lang) ?? "";
     wrap.appendChild(card);
     const phrase = spoken(q, ctx.lang);
     if (phrase) round.instruct(phrase);
@@ -48,7 +57,7 @@ export const calculGame: GameDef = {
       for (const v of choices(q.answer, round.assist ? 2 : p.n)) {
         const b = h("button", { class: "ca-choice" }, String(v));
         if (v === q.answer) good = b;
-        b.onclick = () => (v === q.answer ? round.win(b, "", { delay: 1100 }) : round.miss(b));
+        b.onclick = () => { if (round.ended) return; if (v === q.answer) { reveal(); round.win(b, result, { delay: result ? 2200 : 1100 }); } else round.miss(b); };
         grid.appendChild(b);
       }
       wrap.appendChild(grid);
@@ -76,7 +85,7 @@ export const calculGame: GameDef = {
     const ok = h("button", { class: "k-btn primary ca-ok", "aria-label": "OK" }, "✅") as HTMLButtonElement;
     ok.onclick = () => {
       if (!typed || typed === "-") return;
-      if (Number(typed) === q.answer) round.win(screen, "", { delay: 1000 });
+      if (Number(typed) === q.answer) { reveal(); round.win(screen, result, { delay: result ? 2000 : 1000 }); }
       else { round.miss(screen); typed = ""; render(); }
     };
     wrap.append(screen, pad, ok);

@@ -87,6 +87,12 @@ const OP_WORDS: Record<Lang, Record<Op, string>> = {
   es: { "+": "más", "-": "menos", "×": "por", "÷": "entre" },
 };
 /** « Combien font 3 plus 4 ? » dans les 4 langues. */
+/** « 3 plus 2 égale 5 ! » (dit quand on a trouvé). */
+export function spokenResult(q: Question, lang: Lang): string | null {
+  if (!q.speak) return null;
+  const { a, op, b } = q.speak, w = OP_WORDS[lang][op], r = q.answer;
+  return { fr: `${a} ${w} ${b} égale ${r} !`, en: `${a} ${w} ${b} equals ${r}!`, de: `${a} ${w} ${b} ist ${r}!`, es: `¡${a} ${w} ${b} es ${r}!` }[lang];
+}
 export function spoken(q: Question, lang: Lang): string | null {
   if (!q.speak) return null;
   const { a, op, b } = q.speak, w = OP_WORDS[lang][op];

@@ -24,10 +24,18 @@ import { melodieGame } from "./melodie/game";
 import { docteurGame } from "./docteur/game";
 import { pizzeriaGame } from "./pizzeria/game";
 import { glacierGame } from "./glacier/game";
+import { emotionsGame } from "./emotions/game";
+import { meteoGame } from "./meteo/game";
+import { respireGame } from "./respire/game";
+import { dessinGame } from "./dessin/game";
+import { pianoGame } from "./piano/game";
+import { toursGame } from "./tours/game";
+import { lireGame } from "./lire/game";
 
 export const GAMES: GameDef[] = [...LANGUAGE_GAMES, couleursGame, ecrireGame, calculGame, memoireGame, suitesGame, intrusGame, codeGame, horlogeGame, monnaieGame,
   bullesGame, taupeGame, fruitsGame, reflexeGame, dinoGame, courseGame, tresorsGame,
-  mondeGame, saisonsGame, jardinGame, docteurGame, pizzeriaGame, glacierGame, melodieGame];
+  mondeGame, saisonsGame, jardinGame, docteurGame, pizzeriaGame, glacierGame, melodieGame,
+  emotionsGame, meteoGame, respireGame, dessinGame, pianoGame, toursGame, lireGame];
 
 export const gameById = (id: string) => GAMES.find((g) => g.id === id);
 

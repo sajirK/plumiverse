@@ -22,6 +22,8 @@ export interface GameDef {
   /** Nom des compétences (pour l'espace parent). */
   skills?: Record<string, Tr>;
   isNew?: boolean;
+  /** Jeu libre (dessin, piano, respiration…) : un seul niveau, pas d'épreuve ni de difficulté. */
+  free?: boolean;
   /** Le jeu n'apparaît que si… (ex. un cours de langue seulement si la langue est apprise). */
   available?(ctx: GameCtx): boolean;
   track(ctx: GameCtx): Track;

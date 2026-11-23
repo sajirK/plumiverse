@@ -73,9 +73,12 @@ export const bullesGame: GameDef = {
     }
     function pop(b: B) {
       if (round.ended || !bubbles.includes(b)) return;
-      if (!isGood(b)) { b.el.classList.remove("k-miss"); void b.el.offsetWidth; b.el.classList.add("k-miss"); round.oops(); sfx.soft(); return; }
+      if (!isGood(b)) { b.el.classList.remove("k-miss"); void b.el.offsetWidth; b.el.classList.add("k-miss"); round.oops(); sfx.wrong(); if (p.mode !== "all") sayGoal(); return; }
       bubbles.splice(bubbles.indexOf(b), 1);
-      round.burst(b.el); b.el.remove(); sfx.pop();
+      round.burst(b.el); sfx.bubble();
+      const item = b.el.querySelector("span")?.textContent;
+      b.el.remove();
+      if (item) { const t = h("div", { class: "bu-poptext", style: { left: b.x + b.size / 2 + "px", top: b.y + b.size / 2 + "px" } }, item); arena.appendChild(t); round.timeout(() => t.remove(), 1000); }
       score++; meter.set(score);
       if (score >= p.goal) { round.timeout(() => round.end(), 400); return; }
       if (p.every && ++since >= p.every) { since = 0; newTarget(); }

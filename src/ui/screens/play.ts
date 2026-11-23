@@ -23,7 +23,7 @@ export function map([gameId]: string[]) {
   const p = state.current;
   const g = gameById(gameId);
   if (!p || !g || !gamesFor(p).includes(g)) { go("#/home"); return; }
-  if (bandOf(p) === "3-5") { go(`#/play/${g.id}`); return; }
+  if (bandOf(p) === "3-5" || g.free) { go(`#/play/${g.id}`); return; }
   setTitle(tr(g.title));
   const ctx = ctxFor(p);
   const trk = g.track(ctx);
@@ -92,7 +92,7 @@ export async function play([gameId, levelId]: string[]) {
   if (!res) {
     // sortie avant la fin : le temps joué compte quand même
     if (extra) { const k = dayKey(); p.playLog[k] = (p.playLog[k] ?? 0) + extra; await saveProfile(p); }
-    go(bandOf(p) === "3-5" ? "#/home" : `#/game/${g.id}`);
+    go(bandOf(p) === "3-5" || g.free ? "#/home" : `#/game/${g.id}`);
     return;
   }
   await endScreen(p, g.id, trk, ref, res);
@@ -130,8 +130,9 @@ async function endScreen(p: Profile, gameId: string, trk: Track, ref: LevelRef, 
     actions.append(nb);
   }
   actions.append(replay);
-  const back = h("button", { class: "btn ghost" }, little ? "🏠" : "🗺️ " + t("end.map"));
-  back.onclick = () => go(little ? "#/home" : `#/game/${gameId}`);
+  const free = !!gameById(gameId)?.free;
+  const back = h("button", { class: "btn ghost" }, little || free ? "🏠" : "🗺️ " + t("end.map"));
+  back.onclick = () => go(little || free ? "#/home" : `#/game/${gameId}`);
   actions.append(back);
   card.append(actions);
   app.append(h("main", { class: "end" }, card));

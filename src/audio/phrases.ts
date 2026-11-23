@@ -7,7 +7,7 @@ import { numberWords } from "../core/numwords";
 import { GAMES } from "../games";
 import { colorQuestion, countQuestion } from "../games/couleurs/game";
 import { WORDS as WRITE_WORDS } from "../games/ecrire/game";
-import { spoken } from "../games/calcul/logic";
+import { spoken, spokenResult } from "../games/calcul/logic";
 import { TROPHIES } from "../core/trophies";
 
 export /** Toutes les phrases qu'une langue peut dire. */
@@ -37,7 +37,7 @@ function phrases(lang: Lang): Set<string> {
   for (const [, , w] of [...WRITE_WORDS[lang].short, ...WRITE_WORDS[lang].long]) add(w);
   for (const x of TROPHIES) { add(x.title[lang]); add(`${x.title[lang]}. ${x.hint[lang]}`); }
   // questions de calcul dites à voix haute (petits nombres et tables)
-  const q = (a: number, op: "+" | "-" | "×" | "÷", b: number) => add(spoken({ text: "", answer: 0, speak: { a, op, b } }, lang) ?? "");
+  const q = (a: number, op: "+" | "-" | "×" | "÷", b: number) => { add(spoken({ text: "", answer: 0, speak: { a, op, b } }, lang) ?? ""); add(spokenResult({ text: "", answer: op === "+" ? a + b : op === "-" ? a - b : op === "×" ? a * b : a / b, speak: { a, op, b } }, lang) ?? ""); };
   for (let a = 0; a <= 20; a++) for (let b = 0; b <= 20; b++) { if (a + b <= 20) q(a, "+", b); if (b <= a) q(a, "-", b); }
   for (let a = 1; a <= 10; a++) for (let b = 1; b <= 10; b++) { q(a, "×", b); if (a >= 2) q(a * b, "÷", a); }
   return out;

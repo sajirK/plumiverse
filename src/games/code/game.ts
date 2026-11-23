@@ -1,5 +1,5 @@
 // Code (5-14 ans) : programmer le robot jusqu'à la pile. Flèches → flèches comptées → boucles → grandes grilles.
-import { L, type LevelDef, type Track } from "../../core/types";
+import { L, type Lang, type LevelDef, type Track, type Tr } from "../../core/types";
 import { pick } from "../../core/util";
 import type { GameDef } from "../types";
 import { h } from "../../ui/dom";
@@ -23,6 +23,17 @@ export const TRACK: Track = {
   ],
 };
 
+const DIR_NAME: Record<Dir, Tr> = { up: L("en haut", "up", "nach oben", "arriba"), down: L("en bas", "down", "nach unten", "abajo"), left: L("à gauche", "left", "nach links", "a la izquierda"), right: L("à droite", "right", "nach rechts", "a la derecha") };
+const CSAY = {
+  tryDir: (d: Dir, lang: Lang) => ({ fr: `Essaie ${DIR_NAME[d].fr} !`, en: `Try ${DIR_NAME[d].en}!`, de: `Versuch es ${DIR_NAME[d].de}!`, es: `¡Prueba ${DIR_NAME[d].es}!` })[lang],
+  first: L("Choisis d'abord des flèches !", "Choose some arrows first!", "Wähl zuerst ein paar Pfeile!", "¡Primero elige unas flechas!"),
+  win: L("Le robot a trouvé la pile !", "The robot found the battery!", "Der Roboter hat die Batterie gefunden!", "¡El robot ha encontrado la pila!"),
+  wall: L("Bong ! Il y a un arbre ! Change la flèche rouge.", "Bonk! There's a tree! Change the red arrow.", "Bong! Da ist ein Baum! Ändere den roten Pfeil.", "¡Bong! ¡Hay un árbol! Cambia la flecha roja."),
+  edge: L("Oups, le robot ne peut pas sortir du jardin ! Change la flèche rouge.", "Oops, the robot can't leave the garden! Change the red arrow.", "Hoppla, der Roboter kann nicht aus dem Garten! Ändere den roten Pfeil.", "¡Uy, el robot no puede salir del jardín! Cambia la flecha roja."),
+  short: L("Le robot n'est pas encore arrivé ! Ajoute des flèches.", "The robot isn't there yet! Add more arrows.", "Der Roboter ist noch nicht da! Füg Pfeile hinzu.", "¡El robot todavía no ha llegado! Añade flechas."),
+  intro: L("Aide le robot à aller jusqu'à la pile ! Choisis les flèches, puis appuie sur le bouton vert.", "Help the robot reach the battery! Choose the arrows, then press the green button.", "Hilf dem Roboter, zur Batterie zu kommen! Wähl die Pfeile und drück dann den grünen Knopf.", "¡Ayuda al robot a llegar a la pila! Elige las flechas y pulsa el botón verde."),
+  again: L("Un nouveau jardin ! Où est la pile ?", "A new garden! Where's the battery?", "Ein neuer Garten! Wo ist die Batterie?", "¡Un jardín nuevo! ¿Dónde está la pila?"),
+};
 export const codeGame: GameDef = {
   id: "code",
   icon: "🤖",
@@ -31,7 +42,7 @@ export const codeGame: GameDef = {
   title: L("Code : le petit robot", "Code: the little robot", "Code: der kleine Roboter", "Código: el pequeño robot"),
   desc: L("Programmer un robot avec des flèches : séquences, programme le plus court, puis boucles « répéter 3 fois ».", "Program a robot with arrows: sequences, the shortest program, then “repeat 3 times” loops.", "Einen Roboter mit Pfeilen programmieren: Abfolgen, das kürzeste Programm, dann Schleifen „3-mal wiederholen“.", "Programar un robot con flechas: secuencias, el programa más corto y luego bucles «repetir 3 veces»."),
   skills: { sequences: L("Programmer une suite d'actions", "Programming a sequence", "Eine Abfolge programmieren", "Programar una secuencia"), boucles: L("Les boucles", "Loops", "Schleifen", "Los bucles") },
-  speech: (lang) => [L("Bong, un arbre !", "Bump, a tree!", "Bumm, ein Baum!", "¡Pum, un árbol!"), L("Le robot ne peut pas sortir !", "The robot can't leave the board!", "Der Roboter kann nicht hinaus!", "¡El robot no puede salir!"), L("Pas encore arrivé !", "Not there yet!", "Noch nicht angekommen!", "¡Todavía no ha llegado!")].map((x) => x[lang]),
+  speech: (lang) => [...Object.values(DIR_NAME).map((x) => x[lang]), ...(Object.keys(DIR_NAME) as Dir[]).map((d) => CSAY.tryDir(d, lang)), ...(["first", "win", "wall", "edge", "short", "intro", "again"] as const).map((k) => CSAY[k][lang])],
   track: () => TRACK,
   instruction: (level, ctx) => (level.params.loops
     ? L("Programme le robot jusqu'à la pile. Utilise les boucles pour aller plus vite !", "Program the robot to the battery. Use loops to go faster!", "Programmiere den Roboter bis zur Batterie. Nutze Schleifen!", "Programa el robot hasta la pila. ¡Usa los bucles!")
@@ -65,7 +76,7 @@ export const codeGame: GameDef = {
     const btn: Record<string, HTMLButtonElement> = {};
     for (const d of ["left", "up", "down", "right"] as Dir[]) {
       const b = h("button", { class: "co-arrow", "aria-label": d }, ARROW[d]) as HTMLButtonElement;
-      b.onclick = () => { if (running || program.length >= maxSlots) return; sfx.tap(); program.push({ dir: d, n: 1 }); draw(); };
+      b.onclick = () => { if (running || program.length >= maxSlots) return; sfx.click(); program.push({ dir: d, n: 1 }); round.say(DIR_NAME[d][ctx.lang]); draw(); };
       arrows.appendChild(b); btn[d] = b;
     }
     if (loops) for (const n of [2, 3, 4, 5]) {
@@ -75,31 +86,52 @@ export const codeGame: GameDef = {
     }
     const undo = h("button", { class: "act-btn undo", "aria-label": "⌫" }, "⌫") as HTMLButtonElement;
     const go = h("button", { class: "act-btn go", "aria-label": "▶" }, "▶️") as HTMLButtonElement;
+    const bulb = h("button", { class: "act-btn bulb", "aria-label": "💡" }, "💡") as HTMLButtonElement;
     undo.onclick = () => { if (!running && program.length) { sfx.pop(); program.pop(); draw(); } };
-    actions.append(undo, go);
+    let hintShown = 0;
+    const sol = loops ? compress(g.solution) : g.solution.map((d) => ({ dir: d, n: 1 }));
+    bulb.onclick = () => {
+      if (running) return;
+      let ok = 0;
+      while (ok < program.length && ok < sol.length && program[ok].dir === sol[ok].dir && program[ok].n === sol[ok].n) ok++;
+      program.splice(ok);
+      hintShown = Math.min(sol.length, Math.max(hintShown, ok) + 1);
+      sfx.coin(); round.say(CSAY.tryDir(sol[hintShown - 1].dir, ctx.lang));
+      draw();
+    };
+    actions.append(undo, bulb, go);
     btn.undo = undo; btn.go = go;
     function draw(active = -1, error = -1) {
       prog.innerHTML = "";
       for (let i = 0; i < maxSlots; i++) {
         const b = program[i];
-        prog.appendChild(h("span", { class: "co-slot" + (b ? " full" : "") + (i === active ? " now" : "") + (i === error ? " err" : "") }, b ? ARROW[b.dir] + (b.n > 1 ? `×${b.n}` : "") : ""));
+        const hint = !b && hintShown && i < hintShown ? sol[i] : null;
+        prog.appendChild(h("span", { class: "co-slot" + (b ? " full" : "") + (hint ? " hint" : "") + (i === active ? " now" : "") + (i === error ? " err" : "") }, b ? ARROW[b.dir] + (b.n > 1 ? `×${b.n}` : "") : hint ? ARROW[hint.dir] + (hint.n > 1 ? `×${hint.n}` : "") : ""));
       }
+      for (const k of ["left", "up", "down", "right"]) btn[k].disabled = running || program.length >= maxSlots;
+      undo.disabled = bulb.disabled = go.disabled = running;
     }
     draw();
     go.onclick = async () => {
-      if (running || !program.length) return;
-      running = true;
+      if (running) return;
+      if (!program.length) { round.say(CSAY.first[ctx.lang]); round.hint(btn[sol[0].dir]); return; }
+      running = true; draw();
       const dirs = expand(program);
       const res = run(g, dirs);
       // index de bloc pour chaque pas (pour éclairer le bon bloc)
       const blockOf: number[] = program.flatMap((b, i) => Array(b.n).fill(i));
-      for (let i = 1; i < res.trace.length; i++) { draw(blockOf[i - 1]); place(...res.trace[i]); sfx.step(i); await wait(380); }
-      if (res.result === "win") { round.win(bot, "", { delay: 1500 }); return; }
+      const tile = (x: number, y: number) => board.children[y * g.w + x] as HTMLElement;
+      for (let i = 1; i < res.trace.length; i++) { draw(blockOf[i - 1]); place(...res.trace[i]); tile(...res.trace[i]).classList.add("path"); sfx.bell(400 + i * 40, 0, 0.15, 0.1); await wait(420); }
+      if (res.result === "win") { bot.classList.add("happy"); round.win(bot, CSAY.win[ctx.lang], { delay: 2400 }); return; }
       draw(-1, res.result === "short" ? -1 : blockOf[res.at]);
-      round.miss(prog, { wall: L("Bong, un arbre !", "Bump, a tree!", "Bumm, ein Baum!", "¡Pum, un árbol!"), edge: L("Le robot ne peut pas sortir !", "The robot can't leave the board!", "Der Roboter kann nicht hinaus!", "¡El robot no puede salir!"), short: L("Pas encore arrivé !", "Not there yet!", "Noch nicht angekommen!", "¡Todavía no ha llegado!") }[res.result][ctx.lang]);
-      await wait(1200);
-      place(...g.start); running = false;
+      const last = res.trace[res.trace.length - 1];
+      if (res.result !== "short") tile(...last).classList.add("bump");
+      round.miss(res.result === "short" ? prog : (prog.children[blockOf[res.at]] as HTMLElement) ?? prog, CSAY[res.result][ctx.lang]);
+      await wait(1600);
+      board.querySelectorAll(".path, .bump").forEach((t) => t.classList.remove("path", "bump"));
+      place(...g.start); running = false; draw(-1, res.result === "short" ? -1 : blockOf[res.at]);
     };
     round.setHintTarget(() => (running ? null : btn[nextMove(g, program, loops)] ?? null));
+    round.timeout(() => round.say((round.index === 0 ? CSAY.intro : CSAY.again)[ctx.lang]), round.index === 0 ? 3000 : 400);
   },
 };
