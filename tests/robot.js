@@ -27,6 +27,21 @@ function tap(el) {
   const r = el.getBoundingClientRect(), o = { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, bubbles: true, pointerId: 5 };
   el.dispatchEvent(new PointerEvent("pointerdown", o)); el.dispatchEvent(new PointerEvent("pointerup", o)); if (el.click) el.click(); else el.dispatchEvent(new MouseEvent("click", o));
 }
+
+// glisser un objet jusqu'à une zone (paint : balayer toute la zone, pour étaler la sauce ou frotter)
+function dragTo(from, to, paint, then) {
+  const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+  const ev = (k, x, y) => from.dispatchEvent(new PointerEvent(k, { clientX: x, clientY: y, bubbles: true, pointerId: 7 }));
+  const sx = a.left + a.width / 2, sy = a.top + a.height / 2, cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+  const pts = [];
+  for (let k = 1; k <= 8; k++) pts.push([sx + ((cx - sx) * k) / 8, sy + ((cy - sy) * k) / 8]);
+  if (paint) { const rx = b.width * 0.36, ry = b.height * 0.36; for (let row = -1; row <= 1.001; row += 0.1) for (let col = -1; col <= 1.001; col += 0.1) { const x = (Math.floor(row * 10) % 2 ? -col : col); if (x * x + row * row <= 1) pts.push([cx + x * rx, cy + row * ry]); } }
+  ev("pointerdown", sx, sy);
+  for (const [x, y] of pts) ev("pointermove", x, y);
+  if (then) { const c = then.getBoundingClientRect(), tx = c.left + c.width / 2, ty = c.top + c.height / 2; for (let k = 1; k <= 8; k++) ev("pointermove", cx + ((tx - cx) * k) / 8, cy + ((ty - cy) * k) / 8); ev("pointerup", tx, ty); return; }
+  const [lx, ly] = paint ? [cx, cy] : pts[pts.length - 1];
+  ev("pointerup", lx, ly);
+}
 function trace(pts) {
   const cv = document.querySelector("canvas"); const ev = (k, [x, y]) => cv.dispatchEvent(new PointerEvent(k, { clientX: x, clientY: y, bubbles: true, pointerId: 8 }));
   ev("pointerdown", pts[0]); pts.forEach((p) => ev("pointermove", p)); ev("pointerup", pts[pts.length - 1]);
@@ -48,6 +63,7 @@ async function playLevel(game, level) {
     let t = null;
     try { t = window.__kit?.target(); } catch (e) { robot.errors.push(`${game}/${level} target: ${e}`); }
     if (!t) continue;
+    if (t.from && t.to) { if (t.from.isConnected && t.to.isConnected) { dragTo(t.from, t.to, t.paint, t.then); gestures++; } await wait(80); continue; }
     if (t.__robotAuto) { t.__robotAuto(); continue; }
     if (t.__robotSwipe) { const sw = t.__robotSwipe(); if (sw) { const [x1, y1, x2, y2] = sw; const pts = Array.from({ length: 7 }, (_, k) => [x1 + ((x2 - x1) * k) / 6, y1 + ((y2 - y1) * k) / 6]); trace(pts); gestures++; await wait(60); } continue; }
     if (t.__robotPath) { trace(t.__robotPath()); gestures++; await wait(80); continue; }

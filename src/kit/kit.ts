@@ -9,7 +9,7 @@ import { say, stop as stopVoice } from "../audio/voice";
 import { sfx } from "../audio/sfx";
 import type { GameCtx, GameDef } from "../games/types";
 
-export type HintTarget = Element | { from: Element; to: Element; paint?: boolean } | null | undefined;
+export type HintTarget = Element | { from: Element; to: Element; paint?: boolean; then?: Element } | null | undefined;
 
 export interface RoundApi {
   stage: HTMLElement;

@@ -6,7 +6,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<s
   for (const [k, v] of Object.entries(attrs)) {
     if (v === undefined || v === null || v === false) continue;
     if (k.startsWith("on") && typeof v === "function") (e as unknown as Record<string, unknown>)[k] = v;
-    else if (k === "style" && typeof v === "object") Object.assign(e.style, v);
+    else if (k === "style" && typeof v === "object") for (const [sk, sv] of Object.entries(v as Record<string, string>)) { if (sk.startsWith("--")) e.style.setProperty(sk, sv); else (e.style as unknown as Record<string, string>)[sk] = sv; }
     else e.setAttribute(k, v === true ? "" : String(v));
   }
   for (const c of children) if (c !== null && c !== undefined && c !== false) e.append(c instanceof Node ? c : String(c));

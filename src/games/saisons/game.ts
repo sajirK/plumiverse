@@ -3,6 +3,7 @@ import { L, type Lang, type LevelDef, type Track, type Tr } from "../../core/typ
 import { shuffle, type Rng } from "../../core/util";
 import type { GameDef } from "../types";
 import { h } from "../../ui/dom";
+import { drag, inside } from "../../kit/drag";
 import { sfx } from "../../audio/sfx";
 
 export type Cloth = "manteau" | "echarpe" | "gants" | "bottes" | "parapluie" | "casquette" | "lunettes" | "tshirt" | "short" | "maillot";
@@ -44,18 +45,25 @@ export function outfitMessage(w: Weather, worn: Cloth[], lang: Lang): string {
 }
 export const dressText = (w: Weather, lang: Lang) => w.text[lang] + " " + L("Habille-le pour aller dehors !", "Dress him to go outside!", "Zieh ihn zum Rausgehen an!", "¡Vístelo para salir!")[lang];
 
-export interface Season { id: string; name: Tr; scene: string; e: string }
+export interface Season { id: string; name: Tr; scene: string; e: string; hint: Tr }
 export const SEASONS: Season[] = [
-  { id: "printemps", name: L("le printemps", "spring", "der Frühling", "la primavera"), scene: "🌷🐣🌸", e: "🌸" },
-  { id: "ete", name: L("l'été", "summer", "der Sommer", "el verano"), scene: "🏖️☀️🍉", e: "☀️" },
-  { id: "automne", name: L("l'automne", "autumn", "der Herbst", "el otoño"), scene: "🍂🍄🌰", e: "🍂" },
-  { id: "hiver", name: L("l'hiver", "winter", "der Winter", "el invierno"), scene: "⛄❄️🧤", e: "⛄" },
+  { id: "printemps", name: L("le printemps", "spring", "der Frühling", "la primavera"), scene: "🌷🐣🌸", e: "🌸", hint: L("les fleurs poussent et les oiseaux font leur nid", "flowers grow and birds build their nests", "die Blumen wachsen und die Vögel bauen ihre Nester", "crecen las flores y los pájaros hacen su nido") },
+  { id: "ete", name: L("l'été", "summer", "der Sommer", "el verano"), scene: "🏖️☀️🍉", e: "☀️", hint: L("il fait chaud et on va à la plage", "it's hot and we go to the beach", "es ist heiß und wir gehen an den Strand", "hace calor y vamos a la playa") },
+  { id: "automne", name: L("l'automne", "autumn", "der Herbst", "el otoño"), scene: "🍂🍄🌰", e: "🍂", hint: L("les feuilles tombent des arbres", "the leaves fall from the trees", "die Blätter fallen von den Bäumen", "las hojas caen de los árboles") },
+  { id: "hiver", name: L("l'hiver", "winter", "der Winter", "el invierno"), scene: "⛄❄️🧤", e: "⛄", hint: L("il fait froid et il peut neiger", "it's cold and it can snow", "es ist kalt und es kann schneien", "hace frío y puede nevar") },
 ];
 export const nextSeason = (id: string) => SEASONS[(SEASONS.findIndex((s) => s.id === id) + 1) % 4];
 export const sceneQ = L("Regarde l'image. Quelle saison est-ce ?", "Look at the picture. Which season is it?", "Schau dir das Bild an. Welche Jahreszeit ist das?", "Mira la imagen. ¿Qué estación es?");
 const DE_DAT: Record<string, string> = { printemps: "dem Frühling", ete: "dem Sommer", automne: "dem Herbst", hiver: "dem Winter" };
 export const afterQ = (s: Season, lang: Lang) => ({ fr: `Qu'est-ce qui vient après ${s.name.fr} ?`, en: `What comes after ${s.name.en}?`, de: `Was kommt nach ${DE_DAT[s.id]}?`, es: `¿Qué viene después de${s.name.es.startsWith("el ") ? "l " + s.name.es.slice(3) : " " + s.name.es}?` })[lang];
-export const seasonIs = (s: Season, lang: Lang) => { const n = s.name[lang]; return ({ fr: `Oui, c'est ${n} !`, en: `Yes, it's ${n}!`, de: `Ja, das ist ${n}!`, es: `¡Sí, es ${n}!` })[lang]; };
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+/** « C'est le printemps : les fleurs poussent… » */
+export const seasonIs = (s: Season, lang: Lang) => { const n = s.name[lang], k = s.hint[lang]; return ({ fr: `C'est ${n} : ${k} !`, en: `It's ${n}: ${k}!`, de: `Das ist ${n}: ${k}!`, es: `¡Es ${n}: ${k}!` })[lang]; };
+/** « Après le printemps, vient l'été ! » */
+export const afterIs = (s: Season, lang: Lang) => { const a = s.name[lang], b = nextSeason(s.id).name[lang]; return ({ fr: `Après ${a}, vient ${b} !`, en: `After ${a} comes ${b}!`, de: `Nach ${DE_DAT[s.id]} kommt ${b}!`, es: `¡Después de${a.startsWith("el ") ? "l " + a.slice(3) : " " + a} viene ${b}!` })[lang]; };
+/** Mauvaise saison sur l'image : « L'été, c'est quand il fait chaud… Regarde bien l'image ! » */
+export const notThis = (s: Season, lang: Lang) => { const n = cap(s.name[lang]), k = s.hint[lang]; return ({ fr: `${n}, c'est quand ${k}. Regarde bien l'image !`, en: `${n} is when ${k}. Look carefully at the picture!`, de: `Das wäre ${s.name.de}: ${k}. Schau dir das Bild genau an!`, es: `${n} es cuando ${k}. ¡Mira bien la imagen!` })[lang]; };
+export const orderHint = L("Printemps, été, automne, hiver… Réfléchis à l'ordre !", "Spring, summer, autumn, winter… Think about the order!", "Frühling, Sommer, Herbst, Winter… Denk an die Reihenfolge!", "Primavera, verano, otoño, invierno… ¡Piensa en el orden!");
 
 export type Step = { kind: "meteo"; weather: Weather; wardrobe: Cloth[] } | { kind: "scene" | "after"; season: Season; answer: string; options: Season[] };
 
@@ -96,13 +104,15 @@ export const saisonsGame: GameDef = {
   skills: { meteo: L("S'habiller selon la météo", "Dressing for the weather", "Sich passend zum Wetter anziehen", "Vestirse según el tiempo"), saisons: L("Les saisons", "The seasons", "Die Jahreszeiten", "Las estaciones") },
   speech: (lang) => [
     sceneQ[lang],
-    ...SEASONS.flatMap((s) => [afterQ(s, lang), seasonIs(s, lang)]),
+    orderHint[lang], ...SEASONS.flatMap((s) => [afterQ(s, lang), seasonIs(s, lang), afterIs(s, lang), notThis(s, lang)]),
     ...WEATHERS.flatMap((w) => [dressText(w, lang), outfitMessage(w, w.need, lang), ...Object.values(w.no).map((x) => x![lang]), ...w.need.map((k) => outfitMessage(w, w.need.filter((x) => x !== k), lang))]),
     ...CLOTH_KEYS.map((k) => CLOTHES[k].name[lang]),
   ],
   track: () => TRACK,
   instruction: (level, ctx) => ((level.params as { weathers: number }).weathers
-    ? L("Regarde le temps qu'il fait et choisis les bons habits !", "Look at the weather and choose the right clothes!", "Schau dir das Wetter an und wähle die richtige Kleidung!", "¡Mira el tiempo que hace y elige la ropa adecuada!")
+    ? (level.params as { seasons: number }).seasons
+      ? L("Habille l'enfant selon la météo, puis trouve les saisons !", "Dress the child for the weather, then find the seasons!", "Zieh das Kind passend zum Wetter an und finde dann die Jahreszeiten!", "¡Viste al niño según el tiempo y luego encuentra las estaciones!")
+      : L("Regarde le temps qu'il fait, et glisse les bons habits sur l'enfant pour sortir !", "Look at the weather and slide the right clothes onto the child to go outside!", "Schau dir das Wetter an und zieh dem Kind die richtigen Sachen zum Rausgehen an!", "¡Mira el tiempo que hace y pon al niño la ropa adecuada para salir!")
     : L("Trouve la bonne saison !", "Find the right season!", "Finde die richtige Jahreszeit!", "¡Encuentra la estación correcta!"))[ctx.lang],
   setup: (level) => plan(level.params as { weathers: number; small: boolean; seasons: number; order?: boolean }),
   start(round, _level, ctx) {
@@ -116,7 +126,11 @@ export const saisonsGame: GameDef = {
       const row = h("div", { class: "k-choices" });
       const btns = st.options.map((o) => {
         const b = h("button", { class: "k-choice" }, h("span", { class: "sa-big" }, o.e), h("small", {}, o.name[ctx.lang]));
-        b.onclick = () => { if (round.ended) return; if (o.id === st.answer) round.win(b, seasonIs(o, ctx.lang), { praise: false, delay: 2200 }); else round.miss(b); };
+        b.onclick = () => {
+          if (round.ended) return;
+          if (o.id === st.answer) round.win(b, st.kind === "scene" ? seasonIs(o, ctx.lang) : afterIs(st.season, ctx.lang), { praise: false, delay: 3600 });
+          else round.miss(b, st.kind === "scene" ? notThis(o, ctx.lang) : orderHint[ctx.lang]);
+        };
         row.appendChild(b); return { b, o };
       });
       wrap.append(card, row);
@@ -135,30 +149,42 @@ export const saisonsGame: GameDef = {
     const ready = h("button", { class: "k-btn primary", "aria-label": "✅" }, "✅");
     wrap.append(sky, h("div", { class: "sa-side" }, wardrobe, ready));
     const btns = {} as Record<Cloth, HTMLElement>;
+    const wornBtn: Partial<Record<Cloth, HTMLElement>> = {};
     const render = () => {
-      wornEl.textContent = worn.map((k) => CLOTHES[k].e).join(" ");
+      wornEl.replaceChildren(...worn.map((k) => {
+        const b = h("button", { class: "sa-on", "aria-label": CLOTHES[k].name[ctx.lang] }, CLOTHES[k].e);
+        b.onclick = (e) => { e.stopPropagation(); toggle(k); };
+        wornBtn[k] = b; return b;
+      }));
       for (const k of st.wardrobe) btns[k].classList.toggle("on", worn.includes(k));
     };
+    function toggle(k: Cloth, put = false) {
+      if (round.ended) return;
+      const i = worn.indexOf(k);
+      if (i >= 0 && !put) { worn.splice(i, 1); sfx.pop(); }
+      else if (i < 0) { worn.push(k); sfx.click(); round.say(CLOTHES[k].name[ctx.lang]); }
+      render();
+    }
     for (const k of st.wardrobe) {
       const b = h("button", { class: "sa-cloth", "aria-label": CLOTHES[k].name[ctx.lang] }, CLOTHES[k].e);
-      b.onclick = () => {
-        if (round.ended) return;
-        const i = worn.indexOf(k);
-        if (i >= 0) { worn.splice(i, 1); sfx.pop(); } else { worn.push(k); sfx.pop(); round.say(CLOTHES[k].name[ctx.lang]); }
-        render();
-      };
+      drag(b, {
+        enabled: () => !round.ended,
+        onMove: (pt) => sky.classList.toggle("k-zone-hot", inside(sky, pt)),
+        onDrop: (pt) => { sky.classList.remove("k-zone-hot"); if (!inside(sky, pt)) return false; toggle(k, true); return true; },
+        onTap: () => toggle(k),
+      });
       wardrobe.appendChild(b); btns[k] = b;
     }
     ready.onclick = () => {
       if (round.ended) return;
       const r = checkOutfit(w, worn);
       if (r.ok) round.win(kid, outfitMessage(w, worn, ctx.lang), { praise: false, delay: 2400 });
-      else round.miss(r.wrong.length ? btns[r.wrong[0]] : ready, outfitMessage(w, worn, ctx.lang));
+      else round.miss(r.wrong.length ? wornBtn[r.wrong[0]] ?? ready : ready, outfitMessage(w, worn, ctx.lang));
     };
     round.setHintTarget(() => {
       const r = checkOutfit(w, worn);
-      if (r.wrong.length) return btns[r.wrong[0]];
-      if (r.missing.length) return btns[r.missing[0]];
+      if (r.wrong.length) return wornBtn[r.wrong[0]] ?? null;
+      if (r.missing.length) return { from: btns[r.missing[0]], to: sky };
       return ready;
     });
     round.timeout(ask, round.index === 0 ? 2400 : 300);

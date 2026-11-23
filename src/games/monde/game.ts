@@ -4,6 +4,7 @@ import { L, type Lang, type LevelDef, type Track, type Tr } from "../../core/typ
 import { shuffle, type Rng } from "../../core/util";
 import type { GameDef } from "../types";
 import { h } from "../../ui/dom";
+import { drag, under } from "../../kit/drag";
 
 export type Cont = "amnord" | "amsud" | "europe" | "afrique" | "asie" | "oceanie" | "antarctique";
 /** name = « l'Afrique », from = « vient d'Afrique ». */
@@ -35,7 +36,14 @@ export const ANIMALS: Animal[] = [
 ];
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-export const askText = (a: Animal, lang: Lang) => ({ fr: `D'où vient ${a.name.fr} ?`, en: `Where does ${a.name.en} come from?`, de: `Woher kommt ${a.name.de}?`, es: `¿De dónde viene ${a.name.es}?` })[lang];
+export const askText = (a: Animal, lang: Lang) => ({ fr: `D'où vient ${a.name.fr} ? Glisse-moi sur mon continent !`, en: `Where does ${a.name.en} come from? Slide me onto my continent!`, de: `Woher kommt ${a.name.de}? Zieh mich auf meinen Kontinent!`, es: `¿De dónde viene ${a.name.es}? ¡Llévame a mi continente!` })[lang];
+/** Le cri de l'animal (comme en V2), dit avant la question. */
+export const CALLS: Record<string, Tr> = {
+  "🦘": L("Hop hop !", "Boing boing!", "Hopp hopp!", "¡Hop hop!"), "🐨": L("Groin groin !", "Grunt grunt!", "Grunz grunz!", "¡Gruñ gruñ!"), "🦒": L("Miam !", "Munch!", "Mampf!", "¡Ñam!"),
+  "🦓": L("Hiiii !", "Neigh!", "Iiiih!", "¡Iiiih!"), "🦛": L("Humpf !", "Hmph!", "Hmpf!", "¡Hmpf!"), "🦍": L("Ouh ouh !", "Ooh ooh!", "Uh uh!", "¡Uh uh!"),
+  "🐼": L("Miam miam !", "Yum yum!", "Mampf mampf!", "¡Ñam ñam!"), "🐯": L("Grrr !", "Grrr!", "Grrr!", "¡Grrr!"), "🦧": L("Ouh ouh !", "Ooh ooh!", "Uh uh!", "¡Uh uh!"),
+  "🦙": L("Bêê !", "Baa!", "Mäh!", "¡Beee!"), "🦝": L("Grrr !", "Grrr!", "Grrr!", "¡Grrr!"), "🐧": L("Coin coin !", "Squawk!", "Kräh!", "¡Cuac!"),
+};
 export const rightText = (a: Animal, lang: Lang) => {
   const n = cap(a.name[lang]), f = CONTINENTS[a.c].from[lang];
   return ({ fr: `Oui ! ${n} vient ${f} ! `, en: `Yes! ${n} comes ${f}! `, de: `Ja! ${n} kommt ${f}! `, es: `¡Sí! ${n} viene ${f}. ` })[lang] + a.fact[lang];
@@ -92,17 +100,24 @@ export const mondeGame: GameDef = {
   title: L("Le tour du monde", "Around the world", "Rund um die Welt", "La vuelta al mundo"),
   desc: L("Chaque animal vient d'un continent : le poser sur la carte du monde pour découvrir les continents.", "Each animal comes from one continent: place it on the world map to learn the continents.", "Jedes Tier kommt von einem Kontinent: Setze es auf die Weltkarte und lerne die Kontinente kennen.", "Cada animal viene de un continente: colócalo en el mapa del mundo para aprender los continentes."),
   skills: { continents: L("Les continents", "The continents", "Die Kontinente", "Los continentes") },
-  speech: (lang) => ANIMALS.flatMap((a) => [askText(a, lang), rightText(a, lang), ...ALL.filter((c) => c !== a.c).map((c) => wrongText(a, c, lang))]),
+  speech: (lang) => ANIMALS.flatMap((a) => [CALLS[a.e][lang], askText(a, lang), rightText(a, lang), ...ALL.filter((c) => c !== a.c).map((c) => wrongText(a, c, lang))]),
   track: () => TRACK,
-  instruction: (_l, ctx) => L("Chaque animal vient d'un continent. Touche sur la carte l'endroit où il vit !", "Each animal comes from a continent. Tap the place on the map where it lives!", "Jedes Tier kommt von einem Kontinent. Tippe auf der Karte an, wo es lebt!", "Cada animal viene de un continente. ¡Toca en el mapa el lugar donde vive!")[ctx.lang],
+  instruction: (_l, ctx) => L("Chaque animal vient d'un continent. Glisse-le sur la carte, là où il vit !", "Each animal comes from a continent. Slide it onto the map, where it lives!", "Jedes Tier kommt von einem Kontinent. Zieh es auf der Karte dorthin, wo es lebt!", "Cada animal viene de un continente. ¡Llévalo al mapa, donde vive!")[ctx.lang],
   setup: (level): Sess => { const p = level.params as { continents: Cont[] }; return { deck: deck(p.continents, level.rounds), placed: [], used: {} }; },
   start(round, level, ctx) {
     const p = level.params as { continents: Cont[]; labels: boolean };
     const s = round.session as Sess;
     const a = s.deck[round.index % s.deck.length];
-    const ask = () => round.say(askText(a, ctx.lang));
+    const ask = () => { round.say(CALLS[a.e][ctx.lang]); round.say(askText(a, ctx.lang), ctx.lang, { interrupt: false }); };
     const card = h("button", { class: "mo-card", "aria-label": "🔊" }, a.e);
-    card.onclick = ask;
+    let hot: Element | null = null;
+    drag(card, {
+      ghost: a.e,
+      enabled: () => !done && !round.ended,
+      onMove: (pt) => { const l = under(pt, ".mo-land:not(.off)"); if (hot && hot !== l) hot.classList.remove("hot"); hot = l; l?.classList.add("hot"); },
+      onDrop: (pt) => { hot?.classList.remove("hot"); const l = under(pt, ".mo-land:not(.off)"); if (!l) return false; return choose(l.dataset.c as Cont); },
+      onTap: ask,
+    });
     const svg = document.createElementNS(NS, "svg");
     svg.setAttribute("viewBox", "0 0 1000 520"); svg.setAttribute("class", "mo-map");
     svg.innerHTML = `<rect x="0" y="0" width="1000" height="520" rx="30" fill="#74c0fc" />`;
@@ -114,6 +129,7 @@ export const mondeGame: GameDef = {
       const on = p.continents.includes(id);
       path.setAttribute("class", "mo-land" + (on ? "" : " off"));
       path.style.fill = CONTINENTS[id].color;
+      path.dataset.c = id;
       if (on) path.addEventListener("click", () => choose(id));
       svg.appendChild(path); lands[id] = path;
     }
@@ -122,9 +138,9 @@ export const mondeGame: GameDef = {
     for (const pl of s.placed) deco.innerHTML += `<text class="mo-placed" style="animation:none" x="${pl.x}" y="${pl.y}">${pl.e}</text>`;
     svg.appendChild(deco);
     round.stage.appendChild(h("div", { class: "ca-wrap" }, card, h("div", { class: "mo-wrap" }, svg)));
-    function choose(c: Cont) {
-      if (done || round.ended) return;
-      if (c !== a.c) { round.miss(lands[c], wrongText(a, c, ctx.lang)); return; }
+    function choose(c: Cont): boolean {
+      if (done || round.ended) return false;
+      if (c !== a.c) { round.miss(lands[c], wrongText(a, c, ctx.lang)); return false; }
       done = true;
       const n = s.used[c] ?? 0; s.used[c] = n + 1;
       const [x, y] = SPOTS[c].places[n % SPOTS[c].places.length];
@@ -132,8 +148,9 @@ export const mondeGame: GameDef = {
       deco.innerHTML += `<text class="mo-placed" x="${x}" y="${y}">${a.e}</text>`;
       card.style.visibility = "hidden";
       round.win(lands[c], rightText(a, ctx.lang), { praise: false, delay: 4800 });
+      return true;
     }
-    round.setHintTarget(() => (done ? null : lands[a.c]));
+    round.setHintTarget(() => (done ? null : { from: card, to: lands[a.c] }));
     round.timeout(ask, round.index === 0 ? 2600 : 400);
   },
 };

@@ -4,7 +4,7 @@ import { seeded } from "../src/core/util";
 import { LANGS } from "../src/core/types";
 import { ANIMALS, CONTINENTS, deck, TRACK as MONDE, rightText, type Cont } from "../src/games/monde/game";
 import { WEATHERS, checkOutfit, plan, wardrobeFor, nextSeason, afterQ, SEASONS, outfitMessage, TRACK as SAISONS } from "../src/games/saisons/game";
-import { newPot, water, sun, nextAction, MAX_WATER, PLANTS } from "../src/games/jardin/game";
+import { newPot, water, sun, nextAction, MAX_WATER, PLANTS, needText } from "../src/games/jardin/game";
 import { melody } from "../src/games/melodie/game";
 import { AILMENTS, TOOLS, session, stepsFor, trayFor, TRACK as DOC, type Cfg as DocCfg } from "../src/games/docteur/game";
 import { order as pizzaOrder, judge as pizzaJudge, nextNeed as pizzaNeed, named, orderLines as pizzaLines, TRACK as PIZZA, type Cfg as PzCfg, type Pizza } from "../src/games/pizzeria/game";
@@ -55,7 +55,9 @@ describe("lot 3", () => {
     const p = newPot("tomate");
     for (let i = 0; i < MAX_WATER; i++) expect(water(p).ok).toBe(true);
     expect(water(p).ok).toBe(false);
-    expect(sun(p).grew).toBe(true);
+    expect(sun(p)).toEqual({ ok: true, grew: true, msg: "warm" });
+    expect(needText("tournesol", "ready", "fr")).toBe("Le tournesol est prêt ! Touche-le pour le cueillir !");
+    expect(needText("fraise", "ready", "es")).toBe("¡La fresa está lista! ¡Tócala para recogerla!");
   });
 
   test("mélodie : bonne longueur, jamais 3 fois la même note de suite", () => {
@@ -75,7 +77,8 @@ describe("lot 3", () => {
         expect(s.patients.length).toBe(l.rounds);
         for (const p of s.patients) {
           const tray = s.tray ?? trayFor([p.ailment], c.tray, seeded(k));
-          for (const st of stepsFor(p.ailment, c)) { expect(tray).toContain(st.tool); expect(st.taps).toBeGreaterThanOrEqual(1); }
+          expect(p.steps.length).toBeGreaterThan(0);
+          for (const st of stepsFor(p.ailment, c)) { expect(tray).toContain(st.tool); if (st.type === "rub") expect(st.amount).toBeGreaterThan(0.5); if (st.type === "place") expect(st.count).toBeGreaterThanOrEqual(1); }
         }
       }
     }
