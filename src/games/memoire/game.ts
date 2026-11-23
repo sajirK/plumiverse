@@ -1,5 +1,6 @@
 // Memory (3-14 ans) : retrouver les paires. De 3 paires d'animaux à 8 paires, puis des paires « image ↔ nombre ».
-import { L, type LevelDef, type Track } from "../../core/types";
+import { L, type LevelDef, type Track, type Tr } from "../../core/types";
+import { numberWords } from "../../core/numwords";
 import { shuffle } from "../../core/util";
 import type { GameDef } from "../types";
 import { h } from "../../ui/dom";
@@ -10,6 +11,31 @@ const SETS: Record<string, string[]> = {
   fruits: ["🍎", "🍌", "🍓", "🍇", "🍊", "🍐", "🍒", "🍉", "🥝", "🍍", "🥥", "🍑"],
   vehicules: ["🚗", "🚌", "🚲", "✈️", "🚂", "⛵", "🚀", "🚁", "🚜", "🚒", "🛵", "🚑"],
   mer: ["🐟", "🐙", "🦀", "🐬", "🐳", "🦈", "🐢", "🦭", "🐠", "🦑", "🐚", "🪼"],
+};
+
+
+/** Le nom dit quand on retourne une carte (comme en V2). */
+export const NAMES: Record<string, Tr> = {
+  "🐶": L("le chien", "the dog", "der Hund", "el perro"), "🐱": L("le chat", "the cat", "die Katze", "el gato"), "🐰": L("le lapin", "the rabbit", "der Hase", "el conejo"),
+  "🦊": L("le renard", "the fox", "der Fuchs", "el zorro"), "🐼": L("le panda", "the panda", "der Panda", "el panda"), "🐸": L("la grenouille", "the frog", "der Frosch", "la rana"),
+  "🐵": L("le singe", "the monkey", "der Affe", "el mono"), "🦁": L("le lion", "the lion", "der Löwe", "el león"), "🐷": L("le cochon", "the pig", "das Schwein", "el cerdo"),
+  "🐮": L("la vache", "the cow", "die Kuh", "la vaca"), "🐨": L("le koala", "the koala", "der Koala", "el koala"), "🐯": L("le tigre", "the tiger", "der Tiger", "el tigre"),
+  "🍎": L("la pomme", "the apple", "der Apfel", "la manzana"), "🍌": L("la banane", "the banana", "die Banane", "el plátano"), "🍓": L("la fraise", "the strawberry", "die Erdbeere", "la fresa"),
+  "🍇": L("le raisin", "the grapes", "die Trauben", "las uvas"), "🍊": L("l'orange", "the orange", "die Orange", "la naranja"), "🍐": L("la poire", "the pear", "die Birne", "la pera"),
+  "🍒": L("les cerises", "the cherries", "die Kirschen", "las cerezas"), "🍉": L("la pastèque", "the watermelon", "die Wassermelone", "la sandía"), "🥝": L("le kiwi", "the kiwi", "die Kiwi", "el kiwi"),
+  "🍍": L("l'ananas", "the pineapple", "die Ananas", "la piña"), "🥥": L("la noix de coco", "the coconut", "die Kokosnuss", "el coco"), "🍑": L("la pêche", "the peach", "der Pfirsich", "el melocotón"),
+  "🚗": L("la voiture", "the car", "das Auto", "el coche"), "🚌": L("le bus", "the bus", "der Bus", "el autobús"), "🚲": L("le vélo", "the bike", "das Fahrrad", "la bici"),
+  "✈️": L("l'avion", "the plane", "das Flugzeug", "el avión"), "🚂": L("le train", "the train", "der Zug", "el tren"), "⛵": L("le bateau", "the boat", "das Boot", "el barco"),
+  "🚀": L("la fusée", "the rocket", "die Rakete", "el cohete"), "🚁": L("l'hélicoptère", "the helicopter", "der Hubschrauber", "el helicóptero"), "🚜": L("le tracteur", "the tractor", "der Traktor", "el tractor"),
+  "🚒": L("le camion de pompiers", "the fire engine", "das Feuerwehrauto", "el camión de bomberos"), "🛵": L("le scooter", "the scooter", "der Roller", "la moto"), "🚑": L("l'ambulance", "the ambulance", "der Krankenwagen", "la ambulancia"),
+  "🐟": L("le poisson", "the fish", "der Fisch", "el pez"), "🐙": L("la pieuvre", "the octopus", "der Oktopus", "el pulpo"), "🦀": L("le crabe", "the crab", "die Krabbe", "el cangrejo"),
+  "🐬": L("le dauphin", "the dolphin", "der Delfin", "el delfín"), "🐳": L("la baleine", "the whale", "der Wal", "la ballena"), "🦈": L("le requin", "the shark", "der Hai", "el tiburón"),
+  "🐢": L("la tortue", "the turtle", "die Schildkröte", "la tortuga"), "🦭": L("le phoque", "the seal", "die Robbe", "la foca"), "🐠": L("le poisson tropical", "the tropical fish", "der Tropenfisch", "el pez tropical"),
+  "🦑": L("le calmar", "the squid", "der Tintenfisch", "el calamar"), "🐚": L("le coquillage", "the shell", "die Muschel", "la concha"), "🪼": L("la méduse", "the jellyfish", "die Qualle", "la medusa"),
+};
+export const MSG = {
+  all: L("Tu as trouvé toutes les paires !", "You found all the pairs!", "Du hast alle Paare gefunden!", "¡Has encontrado todas las parejas!"),
+  again: L("Encore une partie ! Trouve les paires !", "Another game! Find the pairs!", "Noch eine Runde! Finde die Paare!", "¡Otra partida! ¡Encuentra las parejas!"),
 };
 
 export interface Card { key: string; face: string }
@@ -49,12 +75,13 @@ export const memoireGame: GameDef = {
   ages: [3, 14],
   title: L("Memory", "Memory", "Memory", "Memoria"),
   desc: L("Retourner les cartes et retrouver les paires : la mémoire et l'attention, de 3 à 9 paires.", "Turn the cards over and find the pairs: memory and attention, from 3 to 9 pairs.", "Karten umdrehen und Paare finden: Gedächtnis und Aufmerksamkeit, von 3 bis 9 Paaren.", "Dar la vuelta a las cartas y encontrar las parejas: memoria y atención, de 3 a 9 parejas."),
+  speech: (lang) => [MSG.all[lang], MSG.again[lang], ...Object.values(NAMES).map((x) => x[lang])],
   skills: { memoire: L("Mémoire", "Memory", "Gedächtnis", "Memoria") },
   track: () => TRACK,
   instruction: (level, ctx) => (level.params.numbers
     ? L("Trouve l'image qui va avec chaque nombre !", "Match each picture with its number!", "Finde zu jeder Zahl das passende Bild!", "¡Une cada imagen con su número!")
     : L("Retourne deux cartes. Trouve les paires !", "Turn over two cards. Find the pairs!", "Dreh zwei Karten um. Finde die Paare!", "Da la vuelta a dos cartas. ¡Encuentra las parejas!"))[ctx.lang],
-  start(round, level) {
+  start(round, level, ctx) {
     const p = level.params as { pairs: number; set?: string; numbers?: boolean };
     const cards = deck(p.pairs, p.set ?? "animaux", !!p.numbers);
     const seen = new Set<number>();
@@ -72,8 +99,10 @@ export const memoireGame: GameDef = {
     });
     function flip(i: number) {
       if (lock || round.ended || found.has(i) || open.includes(i)) return;
-      sfx.tap();
+      sfx.click();
       els[i].classList.add("up");
+      const nm = p.numbers ? numberWords(+cards[i].key, ctx.lang) : NAMES[cards[i].key]?.[ctx.lang];
+      if (nm) round.say(nm);
       open.push(i);
       if (open.length < 2) { seen.add(i); return; }
       const [a, b] = open;
@@ -81,14 +110,14 @@ export const memoireGame: GameDef = {
         found.add(a); found.add(b); open = [];
         seen.add(b);
         els[a].classList.add("found"); els[b].classList.add("found");
-        sfx.good(); round.burst(els[b]);
-        if (found.size === cards.length) round.win(grid, "", { delay: 900 });
+        lock = true;
+        round.timeout(() => { lock = false; sfx.success(); round.burst(els[b]); if (found.size === cards.length) round.win(null, MSG.all[ctx.lang], { delay: 1600 }); }, 450);
         return;
       }
       if (isMistake(seen, cards, a, b) || isMistake(seen, cards, b, a)) round.oops();
       seen.add(b);
       lock = true;
-      round.timeout(() => { els[a].classList.remove("up"); els[b].classList.remove("up"); open = []; lock = false; }, 900);
+      round.timeout(() => { els[a].classList.remove("up"); els[b].classList.remove("up"); open = []; lock = false; }, 1100);
     }
     // aide : la carte qui complète la paire ouverte, sinon une paire déjà vue, sinon une carte jamais vue
     round.setHintTarget(() => {
@@ -96,7 +125,8 @@ export const memoireGame: GameDef = {
       if (open.length === 1) return els[cards.findIndex((c, i) => i !== open[0] && c.key === cards[open[0]].key)];
       const rest = cards.map((_, i) => i).filter((i) => !found.has(i));
       const pair = rest.find((i) => seen.has(i) && rest.some((j) => j !== i && cards[j].key === cards[i].key && seen.has(j)));
-      return els[pair ?? rest[0]];
+      return els[pair ?? rest.find((i) => !seen.has(i)) ?? rest[0]];
     });
+    if (round.index > 0) round.say(MSG.again[ctx.lang]);
   },
 };

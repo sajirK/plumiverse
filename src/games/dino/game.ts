@@ -55,7 +55,7 @@ export const dinoGame: GameDef = {
   title: L("Le Dino", "Dino Run", "Dino-Lauf", "El Dino"),
   desc: L("Courir, sauter au bon moment, ramasser les pommes et éviter les escargots jusqu'au château.", "Run, jump at the right moment, collect apples and dodge snails all the way to the castle.", "Laufen, im richtigen Moment springen, Äpfel sammeln und Schnecken ausweichen bis zum Schloss.", "Correr, saltar en el momento justo, recoger manzanas y esquivar caracoles hasta el castillo."),
   skills: { coordination: L("Coordination et anticipation", "Coordination and timing", "Koordination und Timing", "Coordinación y anticipación") },
-  speech: (lang) => [L("Oups ! On réessaie !", "Oops! Try again!", "Hoppla! Nochmal!", "¡Uy! ¡Otra vez!"), L("Aïe ! Saute par-dessus l'escargot !", "Ouch! Jump over the snail!", "Autsch! Spring über die Schnecke!", "¡Ay! ¡Salta por encima del caracol!")].map((x) => x[lang]),
+  speech: (lang) => [L("Dans ta coquille, l'escargot !", "Into your shell, snail!", "Ab in dein Haus, Schnecke!", "¡A tu concha, caracol!"), L("Oups ! On réessaie !", "Oops! Try again!", "Hoppla! Nochmal!", "¡Uy! ¡Otra vez!"), L("Aïe ! Saute par-dessus l'escargot !", "Ouch! Jump over the snail!", "Autsch! Spring über die Schnecke!", "¡Ay! ¡Salta por encima del caracol!")].map((x) => x[lang]),
   track: () => TRACK,
   instruction: (_l, ctx) => L("Les flèches pour courir, la grosse flèche pour sauter. Va jusqu'au château !", "Arrows to run, the big arrow to jump. Get to the castle!", "Pfeile zum Laufen, der große Pfeil zum Springen. Lauf bis zum Schloss!", "Flechas para correr, la flecha grande para saltar. ¡Llega al castillo!")[ctx.lang],
   start(round, level, ctx) {
@@ -114,7 +114,7 @@ export const dinoGame: GameDef = {
         e.x += e.dir * 1.1 * dt; if (e.x < e.min || e.x > e.max) e.dir *= -1;
         const box = { x: e.x - 0.45, y: e.y, w: 0.9, h: 0.8 };
         if (!over(pl, box)) continue;
-        if (pl.vy > 0 && prevB <= box.y + 0.45) { e.alive = false; pl.vy = -10; sfx.pop(); }
+        if (pl.vy > 0 && prevB <= box.y + 0.45) { e.alive = false; pl.vy = -10; sfx.bonk(); round.say(L("Dans ta coquille, l'escargot !", "Into your shell, snail!", "Ab in dein Haus, Schnecke!", "¡A tu concha, caracol!")[ctx.lang]); }
         else if (hurt <= 0) { hurt = 1.2; round.oops(); sfx.soft(); pl.vx = (pl.x < e.x ? -1 : 1) * 7; pl.vy = -7; round.say(L("Aïe ! Saute par-dessus l'escargot !", "Ouch! Jump over the snail!", "Autsch! Spring über die Schnecke!", "¡Ay! ¡Salta por encima del caracol!")[ctx.lang]); }
       }
       for (let i = apples.length - 1; i >= 0; i--) { const a = apples[i]; if (Math.abs(a.x - (pl.x + pl.w / 2)) < 0.7 && Math.abs(a.y - (pl.y + pl.h / 2)) < 0.8) { apples.splice(i, 1); got++; meter.set(got); sfx.coin(); } }

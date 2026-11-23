@@ -3,20 +3,29 @@ import { L, type LevelDef, type Track } from "../../core/types";
 import { shuffle, pick, randInt, type Rng } from "../../core/util";
 import type { GameDef } from "../types";
 import { h } from "../../ui/dom";
+import { numberWords } from "../../core/numwords";
+
+export const SAY = {
+  next: L("Qu'est-ce qui vient après ?", "What comes next?", "Was kommt als Nächstes?", "¿Qué viene después?"),
+  nextNum: L("Quel nombre vient après ?", "Which number comes next?", "Welche Zahl kommt als Nächstes?", "¿Qué número viene después?"),
+  colors: L("Regarde les couleurs : le même groupe se répète !", "Look at the colours: the same group repeats!", "Schau auf die Farben: Die gleiche Gruppe wiederholt sich!", "Mira los colores: ¡el mismo grupo se repite!"),
+  howMuch: L("Regarde de combien ça change à chaque fois !", "Look at how much it changes each time!", "Schau, um wie viel es sich jedes Mal ändert!", "¡Mira cuánto cambia cada vez!"),
+};
 
 const THEMES = [["🍎", "🍌", "🍇", "🍓"], ["🐶", "🐱", "🐰", "🐸"], ["🔴", "🔵", "🟡", "🟢"], ["⭐", "🌙", "☀️", "☁️"], ["🚗", "🚲", "✈️", "⛵"]];
 export const PATTERNS: Record<string, number[]> = { AB: [0, 1], ABC: [0, 1, 2], AAB: [0, 0, 1], ABB: [0, 1, 1], AABB: [0, 0, 1, 1], ABAC: [0, 1, 0, 2], ABCD: [0, 1, 2, 3], ABBC: [0, 1, 1, 2] };
 
-export interface Seq { shown: string[]; answer: string; choices: string[] }
+export interface Seq { shown: string[]; answer: string; choices: string[]; unit?: number }
 
 /** Une suite d'images : on montre `len` éléments et il faut trouver le suivant. */
 export function imageSeq(patterns: string[], len: number, nChoices: number, rng: Rng = Math.random): Seq {
   const pat = PATTERNS[pick(patterns, rng)];
   const theme = shuffle(pick(THEMES, rng), rng);
+  len = Math.max(len, pat.length * 2); // au moins 2 motifs complets : la règle est sans ambiguïté (V2)
   const all = Array.from({ length: len + 1 }, (_, i) => theme[pat[i % pat.length]]);
   const answer = all[len];
   const pool = [answer, ...theme.filter((x) => x !== answer)];
-  return { shown: all.slice(0, len), answer, choices: shuffle(pool.slice(0, nChoices), rng) };
+  return { shown: all.slice(0, len), answer, choices: shuffle(pool.slice(0, nChoices), rng), unit: pat.length };
 }
 
 /** Une suite de nombres (+k, ×2, carrés…), pour les grands. */
@@ -53,23 +62,30 @@ export const suitesGame: GameDef = {
   desc: L("Trouver la règle et ce qui vient après : suites d'images, puis suites de nombres (+, −, ×2, carrés, Fibonacci).", "Find the rule and what comes next: picture patterns, then number sequences (+, −, ×2, squares, Fibonacci).", "Die Regel finden und was als Nächstes kommt: Bilderfolgen, dann Zahlenfolgen (+, −, ×2, Quadratzahlen, Fibonacci).", "Encontrar la regla y lo que viene después: series de imágenes y luego de números (+, −, ×2, cuadrados, Fibonacci)."),
   skills: { suites: L("Suites logiques", "Patterns", "Logische Folgen", "Series lógicas") },
   track: () => TRACK,
-  instruction: (_l, ctx) => L("Qu'est-ce qui vient après ?", "What comes next?", "Was kommt als Nächstes?", "¿Qué viene después?")[ctx.lang],
-  start(round, level) {
+  speech: (lang) => [SAY.next[lang], SAY.nextNum[lang], SAY.colors[lang], SAY.howMuch[lang]],
+  instruction: (_l, ctx) => L("Regarde bien la suite. Qu'est-ce qui vient après ?", "Look carefully at the pattern. What comes next?", "Schau dir die Folge genau an. Was kommt als Nächstes?", "Mira bien la serie. ¿Qué viene después?")[ctx.lang],
+  start(round, level, ctx) {
     const p = level.params as { patterns?: string[]; len?: number; n?: number; numbers?: string[] };
     const q = p.numbers ? numberSeq(pick(p.numbers)) : imageSeq(p.patterns!, p.len!, round.assist ? 2 : p.n!);
-    const row = h("div", { class: "sq-row" + (p.numbers ? " num" : "") }, ...q.shown.map((x) => h("span", { class: "sq-item" }, x)), h("span", { class: "sq-item sq-q" }, "?"));
+    const items = q.shown.map((x, i) => h("span", { class: "sq-item", style: { animationDelay: i * 50 + "ms" } }, x));
+    const row = h("div", { class: "sq-row" + (p.numbers ? " num" : "") }, ...items, h("span", { class: "sq-item sq-q" }, "?"));
+    let hinted = false;
     const grid = h("div", { class: "ca-choices" });
     let good: HTMLElement | null = null;
     for (const c of q.choices) {
       const b = h("button", { class: "ca-choice sq-choice" }, c);
       if (c === q.answer) good = b;
       b.onclick = () => {
-        if (c === q.answer) { (row.lastChild as HTMLElement).textContent = c; (row.lastChild as HTMLElement).classList.add("ok"); round.win(b); }
-        else round.miss(b);
+        if (round.ended) return;
+        if (c === q.answer) { (row.lastChild as HTMLElement).textContent = c; (row.lastChild as HTMLElement).classList.add("ok"); round.win(b, p.numbers ? numberWords(+c, ctx.lang) : ""); return; }
+        // indice (V2) : on colorie les groupes qui se répètent
+        if (!hinted && q.unit) { hinted = true; items.forEach((it, i) => it.classList.add("g" + (Math.floor(i / q.unit!) % 2))); }
+        round.miss(b, (p.numbers ? SAY.howMuch : SAY.colors)[ctx.lang]);
       };
       grid.appendChild(b);
     }
     round.stage.append(h("div", { class: "ca-wrap" }, row, grid));
     round.setHintTarget(() => good);
+    if (round.index > 0) round.say((p.numbers ? SAY.nextNum : SAY.next)[ctx.lang]);
   },
 };

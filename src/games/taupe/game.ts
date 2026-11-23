@@ -30,6 +30,11 @@ export const TRACK: Track = {
   ],
 };
 
+const TSAY = {
+  bonus: L("Taupe étoilée ! Deux d'un coup !", "A star mole! Two at once!", "Ein Sternmaulwurf! Zwei auf einmal!", "¡Topo estrella! ¡Dos de golpe!"),
+  bat: L("Attention, la chauve-souris ! Ne la touche pas !", "Watch out, the bat! Don't touch it!", "Achtung, die Fledermaus! Nicht antippen!", "¡Cuidado, el murciélago! ¡No lo toques!"),
+  ouch: [L("Aïe !", "Ouch!", "Aua!", "¡Ay!"), L("Ouille !", "Ow!", "Autsch!", "¡Uy!"), L("Hihihi !", "Hee hee!", "Hihihi!", "¡Jijiji!"), L("Boing !", "Boing!", "Boing!", "¡Boing!")],
+};
 export const taupeGame: GameDef = {
   id: "taupe",
   icon: "🐹",
@@ -38,7 +43,7 @@ export const taupeGame: GameDef = {
   title: L("Tape la Taupe", "Whack-a-Mole", "Hau den Maulwurf", "Atrapa al topo"),
   desc: L("Réflexes et attention : attraper les taupes sans toucher les chauves-souris, puis ne taper que les bons nombres.", "Reflexes and attention: catch the moles without touching the bats, then whack only the right numbers.", "Reaktion und Aufmerksamkeit: Maulwürfe fangen, ohne die Fledermäuse zu treffen, dann nur die richtigen Zahlen.", "Reflejos y atención: atrapar los topos sin tocar los murciélagos y luego golpear solo los números correctos."),
   skills: { reflexes: L("Réflexes et attention", "Reflexes and attention", "Reaktion und Aufmerksamkeit", "Reflejos y atención"), nombres: L("Reconnaître les nombres (pairs, multiples)", "Spotting numbers (even, multiples)", "Zahlen erkennen (gerade, Vielfache)", "Reconocer números (pares, múltiplos)") },
-  speech: (lang) => [...RULES.map((r) => r.say[lang]), L("Oups ! Pas la chauve-souris !", "Oops! Not the bat!", "Hoppla! Nicht die Fledermaus!", "¡Uy! ¡El murciélago no!")[lang]],
+  speech: (lang) => [TSAY.bonus[lang], TSAY.bat[lang], ...TSAY.ouch.map((x) => x[lang]), ...RULES.map((r) => r.say[lang]), L("Oups ! Pas la chauve-souris !", "Oops! Not the bat!", "Hoppla! Nicht die Fledermaus!", "¡Uy! ¡El murciélago no!")[lang]],
   track: () => TRACK,
   instruction: (level, ctx) => {
     const r = RULES.find((x) => x.id === level.params.rule);
@@ -52,7 +57,7 @@ export const taupeGame: GameDef = {
     const cols = p.holes === 6 ? 3 : p.holes === 12 ? 4 : 3;
     const field = h("div", { class: "ta-field", style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } });
     round.stage.appendChild(field);
-    let score = 0;
+    let score = 0, warnedBat = false;
     const holes = Array.from({ length: p.holes }, () => {
       const el = h("div", { class: "ta-hole" }, h("div", { class: "ta-mole" }));
       el.addEventListener("pointerdown", (e) => { e.preventDefault(); hit(el); });
@@ -63,9 +68,13 @@ export const taupeGame: GameDef = {
     function hit(el: HTMLElement) {
       if (round.ended || !el.classList.contains("up") || el.classList.contains("hit")) return;
       el.classList.add("hit");
-      round.timeout(() => el.classList.remove("up", "hit", "bonus", "bat"), 330);
+      const bonk = h("div", { class: "ta-bonk" }, el.dataset.kind === "bat" ? "🙈" : pick(["💥", "⭐", "😵", "✨"]));
+      el.appendChild(bonk);
+      round.timeout(() => { el.classList.remove("up", "hit", "bonus", "bat"); bonk.remove(); }, 350);
       if (!good(el)) { round.oops(); sfx.soft(); if (!rule) round.say(L("Oups ! Pas la chauve-souris !", "Oops! Not the bat!", "Hoppla! Nicht die Fledermaus!", "¡Uy! ¡El murciélago no!")[ctx.lang]); return; }
-      sfx.pop(); round.burst(el);
+      sfx.bonk(); round.burst(el);
+      if (el.dataset.kind === "bonus") { sfx.coin(); round.say(TSAY.bonus[ctx.lang]); }
+      else if (Math.random() < 0.15) round.say(pick(TSAY.ouch)[ctx.lang]);
       score += rule ? 1 : points(el.dataset.kind as Kind);
       meter.set(score);
       if (score >= p.goal) round.timeout(() => round.end(), 500);
@@ -83,6 +92,7 @@ export const taupeGame: GameDef = {
           const k = nextKind(p.bats ?? 0, 0.1);
           el.dataset.kind = k; el.classList.toggle("bonus", k === "bonus"); el.classList.toggle("bat", k === "bat");
           mole.textContent = k === "bonus" ? "🌟" : k === "bat" ? "🦇" : pick(CRITTERS);
+          if (k === "bat" && !warnedBat) { warnedBat = true; round.say(TSAY.bat[ctx.lang]); }
         }
         el.classList.add("up");
         round.timeout(() => { if (!el.classList.contains("hit")) el.classList.remove("up", "bonus", "bat"); }, p.stay);

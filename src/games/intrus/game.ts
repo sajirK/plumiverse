@@ -60,6 +60,8 @@ export function isAmbiguous(items: number[], odd: number): boolean {
 }
 
 const because = (name: Tr, lang: "fr" | "en" | "de" | "es") => ({ fr: `Les autres sont ${name.fr} !`, en: `The others are ${name.en}!`, de: `Die anderen sind ${name.de}!`, es: `¡Los demás son ${name.es}!` })[lang];
+const whyNot = (name: Tr, lang: "fr" | "en" | "de" | "es") => ({ fr: `Non : celui-là va avec les autres, ce sont ${name.fr}. Cherche encore !`, en: `No: that one goes with the others, they're all ${name.en}. Keep looking!`, de: `Nein: Das passt zu den anderen, das sind alles ${name.de}. Such weiter!`, es: `No: ese va con los otros, todos son ${name.es}. ¡Sigue buscando!` })[lang];
+const FIND = L("Trouve l'intrus !", "Find the odd one out!", "Finde das, was nicht dazugehört!", "¡Encuentra el intruso!");
 
 const lv = (id: string, rounds: number, params: Record<string, unknown>, boss = false): LevelDef => ({ id, rounds, params, boss, skills: ["categories"] });
 
@@ -79,9 +81,9 @@ export const intrusGame: GameDef = {
   title: L("Trouve l'intrus", "Odd one out", "Was passt nicht?", "Encuentra el intruso"),
   desc: L("Classer et comparer : trouver celui qui n'est pas comme les autres, avec des images puis des nombres (pairs, multiples, nombres premiers).", "Sort and compare: find the one that doesn't belong, with pictures then numbers (even, multiples, primes).", "Ordnen und vergleichen: finden, was nicht dazugehört, mit Bildern und dann mit Zahlen (gerade, Vielfache, Primzahlen).", "Clasificar y comparar: encontrar el que no pertenece al grupo, con imágenes y luego con números (pares, múltiplos, primos)."),
   skills: { categories: L("Classer, comparer", "Sorting and comparing", "Ordnen und vergleichen", "Clasificar y comparar") },
-  speech: (lang) => [...EASY, ...SUBTLE, ...NUM_RULES].map((g) => because(g.name, lang)),
+  speech: (lang) => [FIND[lang], ...[...EASY, ...SUBTLE, ...NUM_RULES].flatMap((g) => [because(g.name, lang), whyNot(g.name, lang)])],
   track: () => TRACK,
-  instruction: (_l, ctx) => L("Lequel n'est pas comme les autres ?", "Which one doesn't belong?", "Was passt nicht dazu?", "¿Cuál no es como los demás?")[ctx.lang],
+  instruction: (_l, ctx) => L("Un des objets n'est pas comme les autres. Trouve l'intrus !", "One of these is not like the others. Find the odd one out!", "Eins davon passt nicht zu den anderen. Finde es!", "Uno no es como los demás. ¡Encuentra el intruso!")[ctx.lang],
   start(round, level, ctx) {
     const p = level.params as { kind: string; n: number };
     const n = round.assist ? Math.max(3, p.n - 1) : p.n;
@@ -92,10 +94,15 @@ export const intrusGame: GameDef = {
     for (const it of q.items) {
       const b = h("button", { class: "cf-item intrus" + (p.kind === "numbers" ? " num" : "") }, it);
       if (it === q.odd) good = b;
-      b.onclick = () => (it === q.odd ? round.win(b, why, { praise: true, delay: 1800 }) : round.miss(b));
+      b.onclick = () => {
+        if (round.ended) return;
+        if (it === q.odd) { grid.querySelectorAll(".cf-item").forEach((x) => { if (x !== b) x.classList.add("dim"); }); round.win(b, why, { praise: true, delay: 3000 }); }
+        else round.miss(b, whyNot(q.because, ctx.lang));
+      };
       grid.appendChild(b);
     }
     round.stage.appendChild(grid);
     round.setHintTarget(() => good);
+    if (round.index > 0) round.say(FIND[ctx.lang]);
   },
 };

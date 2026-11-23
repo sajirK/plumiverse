@@ -99,7 +99,7 @@ export const horlogeGame: GameDef = {
         b.innerHTML = clockSvg(c.hr, c.m, ctx.band !== "3-5");
         const ok = c.hr === t.hr && c.m === t.m;
         if (ok) good = b;
-        b.onclick = () => (ok ? round.win(b) : round.miss(b, L("La petite aiguille bleue montre l'heure, la grande rouge les minutes.", "The short blue hand shows the hour, the long red one the minutes.", "Der kurze blaue Zeiger zeigt die Stunde, der lange rote die Minuten.", "La aguja corta azul marca la hora y la larga roja los minutos.")[ctx.lang]));
+        b.onclick = () => (ok ? round.win(b, said) : round.miss(b, L("La petite aiguille bleue montre l'heure, la grande rouge les minutes.", "The short blue hand shows the hour, the long red one the minutes.", "Der kurze blaue Zeiger zeigt die Stunde, der lange rote die Minuten.", "La aguja corta azul marca la hora y la larga roja los minutos.")[ctx.lang]));
         grid.appendChild(b);
       }
       wrap.append(ear, grid);
@@ -117,7 +117,7 @@ export const horlogeGame: GameDef = {
     const ok = h("button", { class: "act-btn go", "aria-label": "OK" }, "✅") as HTMLButtonElement;
     mBtn.onclick = () => { sfx.tap(); m = ((m + 15) % 60) as M; draw(); };
     hBtn.onclick = () => { sfx.tap(); hr = (hr % 12) + 1; draw(); };
-    ok.onclick = () => (hr === t.hr && m === t.m ? round.win(big) : round.miss(big, (m !== t.m ? L("Regarde d'abord la grande aiguille rouge.", "Check the long red hand first.", "Schau zuerst auf den langen roten Zeiger.", "Mira primero la aguja larga roja.") : L("Maintenant, la petite aiguille bleue.", "Now the short blue hand.", "Jetzt der kurze blaue Zeiger.", "Ahora la aguja corta azul."))[ctx.lang]));
+    ok.onclick = () => (hr === t.hr && m === t.m ? round.win(big, said) : round.miss(big, (m !== t.m ? L("Regarde d'abord la grande aiguille rouge.", "Check the long red hand first.", "Schau zuerst auf den langen roten Zeiger.", "Mira primero la aguja larga roja.") : L("Maintenant, la petite aiguille bleue.", "Now the short blue hand.", "Jetzt der kurze blaue Zeiger.", "Ahora la aguja corta azul."))[ctx.lang]));
     wrap.append(h("div", { class: "row" }, ear, big), h("div", { class: "row" }, mBtn, hBtn, ok));
     round.setHintTarget(() => (m !== t.m ? mBtn : hr !== t.hr ? hBtn : ok));
     round.instruct(said);

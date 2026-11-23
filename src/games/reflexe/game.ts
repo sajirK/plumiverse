@@ -34,6 +34,7 @@ export const TRACK: Track = {
   ],
 };
 
+const CHANGE = L("Attention, on change !", "Watch out, the rule changes!", "Achtung, neue Regel!", "¡Atención, cambiamos!");
 export const reflexeGame: GameDef = {
   id: "reflexe",
   icon: "⚡",
@@ -42,7 +43,7 @@ export const reflexeGame: GameDef = {
   title: L("Réflexe Éclair", "Lightning Reflex", "Blitzreaktion", "Reflejo Relámpago"),
   desc: L("Toucher seulement ce que la règle demande : réflexes, attention et contrôle de soi, avec des règles qui changent.", "Tap only what the rule asks: reflexes, attention and self-control, with rules that change.", "Nur antippen, was die Regel verlangt: Reaktion, Aufmerksamkeit und Selbstkontrolle, mit wechselnden Regeln.", "Tocar solo lo que pide la regla: reflejos, atención y autocontrol, con reglas que cambian."),
   skills: { attention: L("Attention et contrôle de soi", "Attention and self-control", "Aufmerksamkeit und Selbstkontrolle", "Atención y autocontrol") },
-  speech: (lang) => RULES.map((r) => r.say[lang]),
+  speech: (lang) => [CHANGE[lang], ...RULES.map((r) => r.say[lang])],
   track: () => TRACK,
   instruction: (_l, ctx) => L("Touche seulement ce qu'on te demande. Le reste, on n'y touche pas !", "Tap only what you're asked. Leave the rest!", "Tipp nur an, was verlangt wird. Den Rest lässt du!", "Toca solo lo que te piden. ¡Lo demás, no!")[ctx.lang],
   start(round, level, ctx) {
@@ -97,7 +98,7 @@ export const reflexeGame: GameDef = {
         rule = RULES.find((r) => r.id === pick(others))!;
         drawRule();
         ruleBox.classList.remove("k-good"); void ruleBox.offsetWidth; ruleBox.classList.add("k-good");
-        round.say(rule.say[ctx.lang]);
+        round.say(CHANGE[ctx.lang]); round.say(rule.say[ctx.lang], ctx.lang, { interrupt: false });
         round.timeout(() => { running = true; spawn(); }, 2600);
       }
     }
