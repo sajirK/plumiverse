@@ -52,7 +52,8 @@ export const reflexeGame: GameDef = {
     const arena = h("div", { class: "re-arena" });
     const ruleBox = h("button", { class: "re-rule" });
     round.stage.append(arena, ruleBox);
-    let rule = RULES.find((r) => r.id === pick(p.rules))!;
+    const firstId = pick(p.rules);
+    let rule = RULES.find((r) => r.id === firstId)!;
     let hits = 0, running = false;
     type It = { el: HTMLElement; x: number; y: number; go: boolean; done?: boolean };
     let items: It[] = [];
@@ -95,7 +96,8 @@ export const reflexeGame: GameDef = {
       if (p.switchAt && hits % p.switchAt === 0 && p.rules.length > 1) {
         running = false; items.slice().forEach(remove);
         const others = p.rules.filter((r) => r !== rule.id);
-        rule = RULES.find((r) => r.id === pick(others))!;
+        const nextId = pick(others);
+        rule = RULES.find((r) => r.id === nextId)!;
         drawRule();
         ruleBox.classList.remove("k-good"); void ruleBox.offsetWidth; ruleBox.classList.add("k-good");
         round.say(CHANGE[ctx.lang]); round.say(rule.say[ctx.lang], ctx.lang, { interrupt: false });

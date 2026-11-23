@@ -66,6 +66,7 @@ export const fruitsGame: GameDef = {
     round.stage.appendChild(canvas);
     const c2 = canvas.getContext("2d")!;
     let W = 300, H = 300, R = 40, G = 300;
+    let bg: HTMLCanvasElement | null = null;
     const resize = () => { const d = devicePixelRatio || 1; W = round.stage.clientWidth; H = round.stage.clientHeight; canvas.width = W * d; canvas.height = H * d; c2.setTransform(d, 0, 0, d, 0, 0); R = Math.max(38, Math.min(W, H) * 0.08); G = H * p.g;
       bg = document.createElement("canvas"); bg.width = W; bg.height = H; const b = bg.getContext("2d")!, plank = Math.max(60, H / 7);
       for (let y = 0, i = 0; y < H; y += plank, i++) { b.fillStyle = i % 2 ? "#c68b59" : "#b97a4b"; b.fillRect(0, y, W, plank); b.fillStyle = "rgba(0,0,0,0.12)"; b.fillRect(0, y + plank - 4, W, 4); b.strokeStyle = "rgba(90, 50, 20, 0.18)"; b.lineWidth = 2; for (let k = 0; k < 4; k++) { const yy = y + 10 + Math.random() * (plank - 20); b.beginPath(); b.moveTo(0, yy); b.bezierCurveTo(W * 0.3, yy + 10, W * 0.6, yy - 10, W, yy + 4); b.stroke(); } }
@@ -76,7 +77,6 @@ export const fruitsGame: GameDef = {
     let objs: O[] = [], halves: { e: string; x: number; y: number; vx: number; vy: number; rot: number; side: number; life: number; label?: string }[] = [], drops: { x: number; y: number; vx: number; vy: number; c: string; life: number }[] = [];
     let count = 0, spawnT = 1.8, trail: { x: number; y: number; t: number }[] = [], down = false, done = false, cuts = 0, lastSwoosh = 0;
     const stains: { x: number; y: number; r: number; c: string; life: number; seed: number }[] = [], texts: { x: number; y: number; s: string; c: string; life: number }[] = [];
-    let bg: HTMLCanvasElement | null = null;
     const target = p.math ? randInt(p.math[0], p.math[1]) : 0;
     let banner = "";
     if (p.math) { banner = `🎯 ${target}`; round.instruct(targetLine(target, ctx.lang)); }
