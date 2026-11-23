@@ -1,6 +1,6 @@
 {
   "name": "plumiverse",
-  "version": "3.0.0-alpha.2",
+  "version": "3.0.0-alpha.3",
   "private": true,
   "description": "Plumiverse \u2014 arcade \u00e9ducative pour les 3-14 ans (FR, EN, DE, ES)",
   "type": "module",
