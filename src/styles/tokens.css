@@ -1,0 +1,66 @@
+/* Les Petits Jeux V2 — tokens de design (une seule source de vérité pour tous les jeux) */
+:root {
+  /* Couleurs de marque */
+  --c-ink: #2f2545;            /* texte principal */
+  --c-ink-soft: #6b5d84;       /* texte secondaire (pour les parents) */
+  --c-paper: #ffffff;
+  --c-cream: #fff8ec;
+  --c-primary: #7048e8;        /* violet Plume */
+  --c-success: #2fb344;
+  --c-success-soft: #d3f9d8;
+  --c-warn: #f59f00;
+  --c-soft-error: #ffe3e3;     /* jamais de rouge vif pour une erreur d'enfant */
+
+  /* Niveaux */
+  --lv1: #37b24d;  --lv1-soft: #d3f9d8;
+  --lv2: #f59f00;  --lv2-soft: #fff3bf;
+  --lv3: #f03e3e;  --lv3-soft: #ffe3e3;
+
+  /* Formes */
+  --r-sm: 14px;
+  --r-md: 22px;
+  --r-lg: 30px;
+  --r-pill: 999px;
+
+  /* Ombres "jouet" (un relief franc, pas de flou) */
+  --sh-1: 0 4px 0 rgba(47, 37, 69, 0.14);
+  --sh-2: 0 7px 0 rgba(47, 37, 69, 0.16);
+  --sh-pressed: 0 1px 0 rgba(47, 37, 69, 0.16);
+  --sh-float: 0 14px 30px rgba(47, 37, 69, 0.22);
+
+  /* Espaces */
+  --s-1: 6px;
+  --s-2: 10px;
+  --s-3: 16px;
+  --s-4: 24px;
+  --s-5: 36px;
+
+  /* Tailles tactiles (doigt d'un enfant de 5 ans) */
+  --tap-min: 64px;
+  --tap-big: clamp(76px, 15vmin, 112px);
+
+  /* Typographie */
+  --font: "Baloo 2", "Comic Sans MS", "Chalkboard SE", "Marker Felt", system-ui, sans-serif;
+  --fs-xs: clamp(12px, 2.6vmin, 14px);
+  --fs-sm: clamp(14px, 3.2vmin, 17px);
+  --fs-md: clamp(17px, 4vmin, 22px);
+  --fs-lg: clamp(22px, 5.4vmin, 32px);
+  --fs-xl: clamp(30px, 7.5vmin, 48px);
+
+  /* Mouvement */
+  --t-fast: 120ms;
+  --t-med: 260ms;
+  --t-slow: 520ms;
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Zones sûres (encoche iPhone, barre iPad) */
+  --safe-t: max(10px, env(safe-area-inset-top));
+  --safe-b: max(12px, env(safe-area-inset-bottom));
+  --safe-l: max(12px, env(safe-area-inset-left));
+  --safe-r: max(12px, env(safe-area-inset-right));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-med: 0ms; --t-slow: 0ms; }
+}

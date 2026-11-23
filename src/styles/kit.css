@@ -1,0 +1,242 @@
+/* Les Petits Jeux V2 — composants partagés (utilisent css/tokens.css) */
+
+/* ---------- Base robuste : pas de zoom, pas de sélection, pas de rebond ---------- */
+html.kit, html.kit body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font);
+  color: var(--c-ink);
+}
+html.kit body {
+  display: flex;
+  flex-direction: column;
+  background: var(--game-bg, linear-gradient(160deg, #fff8ec, #ffe8f0));
+}
+/* :where() = priorité zéro : les styles des jeux passent toujours devant ce reset */
+:where(.kit) :where(button) { font-family: inherit; color: inherit; border: 0; cursor: pointer; padding: 0; background: none; }
+:where(.kit) :where(img, svg) { -webkit-user-drag: none; }
+
+/* ---------- Barre du haut ---------- */
+.k-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--safe-t) var(--safe-r) var(--s-1) var(--safe-l);
+  position: relative;
+  z-index: 50;
+}
+.k-round-btn {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-paper);
+  box-shadow: var(--sh-1);
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  text-decoration: none;
+  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast);
+}
+.k-round-btn:active { transform: translateY(3px) scale(0.94); box-shadow: var(--sh-pressed); }
+.k-round-btn.k-pulse { animation: k-pulse 1.2s var(--ease-out) infinite; }
+@keyframes k-pulse { 0%, 100% { box-shadow: var(--sh-1), 0 0 0 0 rgba(112, 72, 232, 0.45); } 50% { box-shadow: var(--sh-1), 0 0 0 12px rgba(112, 72, 232, 0); } }
+.k-bar .mute-btn { position: static; width: var(--tap-min); height: var(--tap-min); font-size: 28px; flex: none; }
+.k-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-size: var(--fs-md);
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.k-title .k-icon { font-size: 34px; line-height: 1; }
+.k-title .k-name { overflow: hidden; text-overflow: ellipsis; opacity: 0.85; }
+
+/* ---------- Sélecteur de niveau ---------- */
+.k-levels { display: flex; gap: 6px; flex: none; background: rgba(255, 255, 255, 0.6); padding: 5px; border-radius: var(--r-pill); }
+.k-level {
+  min-width: 58px;
+  height: 58px;
+  border-radius: var(--r-pill);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  background: var(--soft);
+  color: var(--c-ink);
+  font-size: 15px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: transform var(--t-med) var(--ease-bounce), opacity var(--t-med), background var(--t-med);
+}
+.k-level .k-lv-stars { font-size: 14px; letter-spacing: -2px; }
+.k-level .k-lv-name { font-size: 11px; margin-top: 3px; font-weight: bold; color: var(--c-ink-soft); }
+.k-level.on { background: var(--col); color: #fff; opacity: 1; transform: scale(1.08); box-shadow: var(--sh-1); }
+.k-level.on .k-lv-name { color: #fff; }
+@media (max-width: 520px) {
+  .k-title .k-name { display: none; }
+  .k-level { min-width: 52px; padding: 0 6px; }
+  .k-level .k-lv-name { display: none; }
+}
+
+/* ---------- Progression de la manche ---------- */
+.k-progress { flex: none; display: flex; justify-content: center; gap: 8px; padding: 2px 0 var(--s-1); }
+.k-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(47, 37, 69, 0.12);
+  display: grid; place-items: center; font-size: 14px;
+  transition: transform var(--t-med) var(--ease-bounce), background var(--t-med);
+}
+.k-dot.now { background: rgba(112, 72, 232, 0.25); transform: scale(1.15); }
+.k-dot.ok { background: #ffd43b; transform: scale(1.1); }
+.k-meter { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.85); border-radius: 999px; padding: 3px 12px 3px 6px; box-shadow: var(--sh-1); }
+.k-meter-icon { font-size: 26px; line-height: 1; }
+.k-meter-track { width: clamp(120px, 30vw, 260px); height: 14px; border-radius: 7px; background: rgba(0,0,0,0.1); overflow: hidden; }
+.k-meter-fill { display: block; height: 100%; width: 0; border-radius: 7px; background: linear-gradient(90deg, #ffd43b, #ff922b); transition: width var(--t-med) var(--ease-out); }
+.k-meter-count { font-weight: bold; font-size: var(--fs-sm); min-width: 3.2em; text-align: right; }
+.k-meter-bump { animation: k-bump 0.3s var(--ease-bounce); }
+@keyframes k-bump { 50% { transform: scale(1.08); } }
+.k-dot.ok::after { content: "★"; color: #fff; font-size: 14px; text-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+
+/* ---------- Scène de jeu ---------- */
+.k-stage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--safe-r) var(--safe-b) var(--safe-l);
+}
+.k-stage.k-swap-out { animation: k-out var(--t-med) var(--ease-out) forwards; }
+.k-stage.k-swap-in { animation: k-in var(--t-slow) var(--ease-bounce); }
+@keyframes k-out { to { opacity: 0; transform: translateY(14px) scale(0.98); } }
+@keyframes k-in { from { opacity: 0; transform: translateY(-14px) scale(0.98); } }
+
+/* ---------- Boutons ---------- */
+.k-btn {
+  min-height: var(--tap-min);
+  padding: 0 var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--c-paper);
+  box-shadow: var(--sh-2);
+  font-size: var(--fs-lg);
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  text-decoration: none;
+  color: var(--c-ink);
+  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast);
+}
+.k-btn:active { transform: translateY(5px); box-shadow: var(--sh-pressed); }
+.k-btn.primary { background: var(--c-success); color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+.k-btn.up { background: var(--lv-next, var(--lv2)); color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+
+/* ---------- Réactions ---------- */
+.k-good { animation: k-good var(--t-slow) var(--ease-bounce); }
+@keyframes k-good { 40% { transform: scale(1.18); } }
+.k-miss { animation: k-miss 420ms ease-in-out; }
+@keyframes k-miss { 20%, 60% { transform: translateX(-9px) rotate(-2deg); } 40%, 80% { transform: translateX(9px) rotate(2deg); } }
+.k-hand {
+  position: fixed; z-index: 1200; font-size: 56px; pointer-events: none;
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,0.25));
+  animation: k-hand 1.4s ease-in-out 2;
+}
+@keyframes k-hand { 0%, 100% { transform: translate(-30%, 10%); } 50% { transform: translate(-30%, -20%) scale(0.92); } }
+canvas.k-particles { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1100; }
+
+/* ---------- Écran de fin de manche ---------- */
+.k-end {
+  position: fixed; inset: 0; z-index: 1000;
+  display: grid; place-items: center;
+  background: rgba(47, 37, 69, 0.35);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  padding: var(--s-3);
+  animation: k-fade var(--t-med) ease-out;
+}
+@keyframes k-fade { from { opacity: 0; } }
+.k-end-card {
+  width: min(520px, 100%);
+  background: var(--c-paper);
+  border-radius: 36px;
+  box-shadow: var(--sh-float);
+  padding: var(--s-4) var(--s-3) var(--s-3);
+  text-align: center;
+  animation: k-pop var(--t-slow) var(--ease-bounce);
+}
+@keyframes k-pop { from { transform: scale(0.6) translateY(40px); opacity: 0; } }
+.k-end-plume { font-size: clamp(70px, 16vmin, 110px); line-height: 1; animation: k-dance 0.9s ease-in-out infinite; display: inline-block; }
+@keyframes k-dance { 0%, 100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(8deg) translateY(-10px); } }
+.k-end-stars { display: flex; justify-content: center; gap: 6px; margin: var(--s-2) 0; }
+.k-end-star { font-size: clamp(48px, 12vmin, 72px); line-height: 1; opacity: 0.18; filter: grayscale(1); transform: scale(0.6); transition: all var(--t-slow) var(--ease-bounce); }
+.k-end-star.lit { opacity: 1; filter: none; transform: scale(1); }
+.k-end-title { font-size: var(--fs-xl); font-weight: bold; margin: 0; }
+.k-end-sub { font-size: var(--fs-sm); color: var(--c-ink-soft); margin: 4px 0 var(--s-3); }
+.k-end-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s-2); }
+.k-end-actions .k-btn { flex: 1 1 140px; }
+
+/* ---------- Consigne visuelle (petite, pour les parents) ---------- */
+.k-caption { font-size: var(--fs-sm); color: var(--c-ink-soft); text-align: center; min-height: 1.3em; margin: 4px 0; }
+
+/* ---------- Carte de consigne (grand visuel + 👂) ---------- */
+.k-prompt {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  min-width: clamp(150px, 34vmin, 260px);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--c-paper);
+  box-shadow: var(--sh-2);
+  margin-bottom: var(--s-4);
+  animation: k-in var(--t-slow) var(--ease-bounce);
+  max-width: min(94vw, 720px);
+}
+.k-prompt-visual { font-size: clamp(64px, 16vmin, 120px); line-height: 1.05; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.k-prompt-ear { position: absolute; right: -10px; top: -12px; width: 46px; height: 46px; border-radius: 50%; background: #e7f5ff; display: grid; place-items: center; font-size: 24px; box-shadow: var(--sh-1); }
+.k-prompt-caption { font-size: var(--fs-sm); color: var(--c-ink-soft); max-width: 560px; text-align: center; }
+
+/* ---------- Grille de réponses ---------- */
+.k-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(12px, 3vmin, 22px); max-width: min(96vw, 900px); }
+.k-choice {
+  min-width: var(--tap-big); min-height: var(--tap-big);
+  padding: 8px 16px;
+  border-radius: var(--r-lg);
+  background: var(--c-paper);
+  box-shadow: var(--sh-2);
+  font-size: var(--fs-xl);
+  font-weight: bold;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  animation: k-in var(--t-slow) var(--ease-bounce) both;
+  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast), background var(--t-med);
+}
+.k-choice:active { transform: translateY(5px); box-shadow: var(--sh-pressed); }
+.k-choice small { font-size: var(--fs-xs); color: var(--c-ink-soft); font-weight: normal; }
+.k-choice.k-good { background: var(--c-success-soft); }
+.k-choice.k-miss { background: var(--c-soft-error); }
+.k-choice.dim { opacity: 0.45; }
+
+/* ---------- Glisser-déposer ---------- */
+.k-ghost { position: fixed; z-index: 1150; pointer-events: none; font-size: clamp(54px, 12vmin, 80px); line-height: 1; transform: translate(-50%, -60%) scale(1.12); filter: drop-shadow(0 12px 10px rgba(0,0,0,0.25)); }
+.k-ghost.k-back { transition: left 0.3s var(--ease-out), top 0.3s var(--ease-out), opacity 0.3s; opacity: 0.25; }
+.k-ghost.k-drop { animation: k-drop 0.22s ease-out forwards; }
+@keyframes k-drop { to { transform: translate(-50%, -50%) scale(0.6); opacity: 0; } }
+.k-lifted { opacity: 0.45; transform: scale(0.92); }
+.k-zone-hot { outline: 5px dashed var(--c-success); outline-offset: 6px; }
+.k-hand.k-hand-drag { animation: none; transform: translate(-30%, 10%); transition: left 0.9s var(--ease-out), top 0.9s var(--ease-out); }

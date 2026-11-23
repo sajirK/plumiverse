@@ -1,0 +1,23 @@
+{
+  "name": "plumiverse",
+  "version": "3.0.0-alpha.1",
+  "private": true,
+  "description": "Plumiverse \u2014 arcade \u00e9ducative pour les 3-14 ans (FR, EN, DE, ES)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite-node scripts/pages.ts && vite --host",
+    "build": "vite-node scripts/pages.ts && tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "test": "vitest run",
+    "audio": "vite-node scripts/build-audio.ts",
+    "typecheck": "tsc --noEmit",
+    "pages": "vite-node scripts/pages.ts",
+    "deploy": "sh scripts/deploy.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}
