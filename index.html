@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Plumiverse — learning games · jeux éducatifs · Lernspiele · juegos educativos</title>
+<meta name="description" content="Learn by playing: reading, writing, maths, French, German, Spanish… Ages 3 to 14, no ads, no account, data stays on the device." />
+<link rel="canonical" href="https://sajirk.github.io/plumiverse/" />
+<link rel="alternate" hreflang="fr" href="https://sajirk.github.io/plumiverse/fr/" />
+<link rel="alternate" hreflang="en" href="https://sajirk.github.io/plumiverse/en/" />
+<link rel="alternate" hreflang="de" href="https://sajirk.github.io/plumiverse/de/" />
+<link rel="alternate" hreflang="es" href="https://sajirk.github.io/plumiverse/es/" />
+<link rel="alternate" hreflang="x-default" href="https://sajirk.github.io/plumiverse/" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Plumiverse — learning games · jeux éducatifs · Lernspiele · juegos educativos" />
+<meta property="og:description" content="Learn by playing: reading, writing, maths, French, German, Spanish… Ages 3 to 14, no ads, no account, data stays on the device." />
+<meta property="og:url" content="https://sajirk.github.io/plumiverse/" />
+<meta property="og:image" content="https://sajirk.github.io/plumiverse/og.png" />
+<meta property="og:locale" content="en_GB" />
+<meta name="theme-color" content="#7048e8" />
+<link rel="icon" href="/plumiverse/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/plumiverse/apple-touch-icon.png" />
+<link rel="manifest" href="/plumiverse/manifest.webmanifest" />
+<script>
+  // l'appareil parle quelle langue ? (on garde le dernier choix)
+  (function () {
+    var saved = localStorage.getItem("plumiverse.lang");
+    var nav = (navigator.languages || [navigator.language || "fr"]).map(function (l) { return l.slice(0, 2); });
+    var langs = ["fr", "en", "de", "es"];
+    var pick = saved && langs.indexOf(saved) >= 0 ? saved : nav.filter(function (l) { return langs.indexOf(l) >= 0; })[0] || "en";
+    location.replace(pick + "/" + location.hash);
+  })();
+</script>
+</head>
+<body>
+<h1>🦉 Plumiverse</h1>
+<ul><li><a href="fr/" hreflang="fr">Français</a></li><li><a href="en/" hreflang="en">English</a></li><li><a href="de/" hreflang="de">Deutsch</a></li><li><a href="es/" hreflang="es">Español</a></li></ul>
+</body>
+</html>
