@@ -39,15 +39,27 @@ let browserVoices: SpeechSynthesisVoice[] = [];
 function refreshVoices() { if (typeof speechSynthesis !== "undefined") browserVoices = speechSynthesis.getVoices(); }
 if (typeof speechSynthesis !== "undefined") { refreshVoices(); speechSynthesis.addEventListener?.("voiceschanged", refreshVoices); }
 
-/** Note une voix : les voix « premium / naturelles » d'abord, et la bonne variante régionale. */
+/** Les voix les plus naturelles de chaque langue (iPhone/iPad, Mac, Android, Windows), de la meilleure à la moins bonne. */
+const PREFERRED: Record<Lang, string[]> = {
+  fr: ["audrey", "amélie", "amelie", "thomas", "marie", "aurélie", "google français", "denise", "henri", "julie", "hortense", "paul", "virginie"],
+  en: ["serena", "sonia", "libby", "kate", "daniel", "google uk english female", "martha", "arthur", "samantha", "ava", "google us english", "hazel", "susan"],
+  de: ["anna", "petra", "helena", "katja", "markus", "yannick", "google deutsch", "hedda", "katja"],
+  es: ["mónica", "monica", "elvira", "jorge", "marisol", "google español", "helena", "laura", "paulina"],
+};
+/** Voix « rigolotes » d'Apple (Eddy, Flo, Mamie, Papi…) et voix de synthèse d'un autre âge : on n'en veut jamais. */
+const NOVELTY = /^(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|mamie|papi|oma|opa|abuela|abuelo)\b|compact|eloquence|espeak|novelty|bad news|bells|boing|bubbles|cellos|whisper|zarvox|trinoids|organ|albert|jester|superstar|wobble|good news|fred|ralph|junior|kathy/i;
+
+/** Note une voix : la bonne langue d'abord, puis les voix naturelles connues, puis « premium / améliorée ». */
 export function scoreVoice(v: Pick<SpeechSynthesisVoice, "name" | "lang" | "localService">, lang: Lang): number {
   const vl = v.lang.replace("_", "-").toLowerCase();
   if (!vl.startsWith(lang)) return -1;
-  let s = 0;
-  if (vl === VOICES[lang].locale.toLowerCase()) s += 3;
-  if (/premium|enhanced|natural|neural|online/i.test(v.name)) s += 6;
-  if (/google|siri|microsoft/i.test(v.name)) s += 3;
-  if (/compact|eloquence|espeak|novelty|bad news|bells|boing|bubbles|cellos|whisper|zarvox|trinoids|organ|albert|jester|superstar|wobble|good news/i.test(v.name)) s -= 10;
+  const name = v.name.toLowerCase();
+  if (NOVELTY.test(name)) return 0;
+  let s = 10;
+  if (vl === VOICES[lang].locale.toLowerCase()) s += 20;
+  const i = PREFERRED[lang].findIndex((p) => name.includes(p));
+  if (i >= 0) s += 40 - i;
+  if (/premium|enhanced|améliorée|amélioré|natural|neural|online/i.test(name)) s += 25;
   return s;
 }
 
@@ -78,7 +90,8 @@ function sayNow(clean: string, lang: Lang): Promise<void> {
   const id = audioId(lang, clean);
   const hasFile = !!manifests[lang]?.has(id);
   (window.__voiceLog ??= []).push({ lang, text: clean, source: muted ? "none" : hasFile ? "file" : "browser" });
-  if (muted) return Promise.resolve();
+  // onglet caché (autre onglet, appli en arrière-plan) : on ne parle pas
+  if (muted || (typeof document !== "undefined" && document.hidden)) return Promise.resolve();
   if (hasFile) {
     return new Promise((done) => {
       const a = new Audio(`${BASE}audio/${lang}/${id}.mp3`);

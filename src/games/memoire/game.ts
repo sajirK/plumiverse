@@ -89,7 +89,7 @@ export const memoireGame: GameDef = {
     let open: number[] = [];
     let lock = false;
     const cols = cards.length <= 6 ? 3 : cards.length <= 12 ? 4 : cards.length <= 16 ? 4 : 6;
-    const grid = h("div", { class: "me-grid", style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } });
+    const grid = h("div", { class: "me-grid", style: { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } });
     round.stage.appendChild(grid);
     const els = cards.map((c, i) => {
       const b = h("button", { class: "mem-card" + (p.numbers ? " num" : ""), "aria-label": "?" }, h("span", { class: "mem-back" }, "🦉"), h("span", { class: "mem-face" }, c.face));

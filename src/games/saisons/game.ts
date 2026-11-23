@@ -145,7 +145,7 @@ export const saisonsGame: GameDef = {
     const wornEl = h("div", { class: "sa-worn" });
     sky.append(h("div", { class: "sa-scene" }, w.scene), h("div", {}, kid, wornEl));
     sky.onclick = ask;
-    const wardrobe = h("div", { class: "sa-wardrobe", style: { gridTemplateColumns: `repeat(${Math.min(5, st.wardrobe.length)}, 1fr)` } });
+    const wardrobe = h("div", { class: "sa-wardrobe", style: { gridTemplateColumns: `repeat(${Math.min(5, st.wardrobe.length)}, minmax(0, 1fr))` } });
     const ready = h("button", { class: "k-btn primary", "aria-label": "✅" }, "✅");
     wrap.append(sky, h("div", { class: "sa-side" }, wardrobe, ready));
     const btns = {} as Record<Cloth, HTMLElement>;

@@ -31,7 +31,7 @@ const PRIVACY: Record<Lang, string[]> = {
 
 function head(lang: Lang, title: string, desc: string, path: string, alternates: Record<Lang, string>) {
   return `<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}" />
 <link rel="canonical" href="${SITE}/${path}" />

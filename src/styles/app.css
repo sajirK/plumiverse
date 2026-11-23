@@ -1,7 +1,8 @@
 /* Plumiverse — styles de l'application (les jeux utilisent aussi kit.css, porté de la V2). */
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+*, *::before, *::after { touch-action: manipulation; }
 body {
   font-family: var(--font);
   color: var(--c-ink);
@@ -718,3 +719,11 @@ body[data-band="12-14"] .game-card, body[data-band="12-14"] .lang-card, body[dat
   .k-title { white-space: normal; font-size: 16px; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .k-title .k-icon { font-size: 26px; }
 }
+.em-badge { width: 58px; height: 58px; flex: none; border-radius: 50%; background: var(--c); display: grid; place-items: center; font-size: 32px; box-shadow: inset 0 -4px 0 rgba(0,0,0,.15); }
+.em-opt { border-left-width: 0; outline: 4px solid transparent; transition: outline-color .2s, transform .2s, background .2s; }
+.em-opt.reading { outline-color: var(--c); background: color-mix(in srgb, var(--c) 18%, #fff); transform: scale(1.03); }
+.em-replay { font-size: 26px; }
+/* Petit robot : la grille tient toujours dans l'écran (téléphone en portrait : on garde la place des boutons) */
+.co-boardwrap { width: min(92vw, 460px, max(200px, calc(100dvh - 430px))); flex: none; }
+@media (orientation: landscape) { .co-boardwrap { width: min(50vw, 460px, calc(100dvh - 120px)); } }
+.co-tile { min-width: 0; min-height: 0; font-size: clamp(14px, 4vmin, 32px); }

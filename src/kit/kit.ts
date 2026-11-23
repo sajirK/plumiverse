@@ -181,17 +181,24 @@ export function runLevel(o: RunOptions): Promise<LevelResult | null> {
     confirmTap(back, () => finish(true), little ? () => say(D.kit.leave, lang) : null);
     repeat.onclick = () => { sfx.tap(); if (instruction) say(instruction, instructionLang); showHand(hintFn()); };
 
+    // rappel quand l'enfant ne touche plus rien : la consigne 2 fois au plus, ensuite la main seule (sans parler).
+    // Rien du tout si le jeu n'attend rien (animation, respiration…) ou si l'onglet est caché.
+    let reminders = 0;
     const armIdle = () => {
       clearTimeout(idleTimer);
       if (!idleMs || ended) return;
       idleTimer = window.setTimeout(() => {
         if (ended || busy) return;
-        if (instruction) say(instruction, instructionLang);
-        showHand(hintFn());
+        const target = hintFn();
+        if (target && !document.hidden) {
+          if (instruction && reminders < 2) say(instruction, instructionLang);
+          reminders++;
+          showHand(target);
+        }
         armIdle();
       }, idleMs);
     };
-    const onAnyInput = () => armIdle();
+    const onAnyInput = () => { reminders = 0; armIdle(); };
     window.addEventListener("pointerdown", onAnyInput, true);
 
     const renderProgress = () => {

@@ -119,28 +119,44 @@ export const emotionsGame: GameDef = {
       round.timeout(tell, round.index === 0 ? 2800 : 350);
       return;
     }
-    // Que ferais-tu ?
+    // Que ferais-tu ? — les enfants ne lisent pas encore : chaque réponse a une grosse pastille de couleur,
+    // la voix lit « Le bleu : … », et la réponse lue s'allume pendant qu'on l'entend.
     const c = (round.session as Choice[])[round.index];
-    const readAll = () => { round.say(c.text[lang]); round.say(WHAT_WOULD[lang], lang, { interrupt: false }); c.options.forEach((o, i) => round.say(`${COLOR_NAMES[i][lang]} ${o.t[lang]}`, lang, { interrupt: false })); };
-    const card = h("button", { class: "em-scene", "aria-label": "🔊" }, h("span", { class: "em-pic" }, c.scene), h("small", {}, c.text[lang]));
-    card.onclick = readAll;
     const why = h("div", { class: "em-body" });
     const opts = h("div", { class: "em-opts" });
     let good: HTMLElement | null = null;
+    const btns: HTMLElement[] = [];
+    let reading = 0;
+    const readAll = async () => {
+      const my = ++reading;
+      btns.forEach((b) => b.classList.remove("reading"));
+      round.say(c.text[lang]);
+      await round.say(WHAT_WOULD[lang], lang, { interrupt: false });
+      for (let i = 0; i < c.options.length; i++) {
+        if (my !== reading || round.ended) return;
+        btns.forEach((b) => b.classList.remove("reading"));
+        btns[i].classList.add("reading");
+        await round.say(`${COLOR_NAMES[i][lang]} ${c.options[i].t[lang]}`, lang, { interrupt: false });
+      }
+      if (my === reading) btns.forEach((b) => b.classList.remove("reading"));
+    };
+    const card = h("button", { class: "em-scene", "aria-label": "🔊" }, h("span", { class: "em-pic" }, c.scene), h("small", {}, c.text[lang]), h("span", { class: "em-replay" }, "🔊"));
+    card.onclick = () => void readAll();
     c.options.forEach((o, i) => {
       const listen = h("span", { class: "em-listen", role: "button", "aria-label": "🔊" }, "🔊");
-      const b = h("button", { class: "em-opt", style: { "--c": COLORS[i] } }, h("span", { class: "em-e" }, o.e), h("span", { class: "em-t" }, o.t[lang]), listen);
-      listen.addEventListener("click", (ev) => { ev.stopPropagation(); round.say(o.t[lang]); });
+      const b = h("button", { class: "em-opt", style: { "--c": COLORS[i] } }, h("span", { class: "em-badge" }, o.e), h("span", { class: "em-t" }, o.t[lang]), listen);
+      listen.addEventListener("click", (ev) => { ev.stopPropagation(); reading++; btns.forEach((x) => x.classList.remove("reading")); b.classList.add("reading"); void round.say(`${COLOR_NAMES[i][lang]} ${o.t[lang]}`).then(() => b.classList.remove("reading")); });
       if (o.good) good = b;
       b.onclick = () => {
         if (round.ended) return;
+        reading++; btns.forEach((x) => x.classList.remove("reading"));
         why.textContent = (o.good ? "💛 " : "🤔 ") + o.why[lang];
         if (o.good) round.win(b, o.why[lang], { praise: false, delay: 4200 }); else round.miss(b, o.why[lang]);
       };
-      opts.appendChild(b);
+      opts.appendChild(b); btns.push(b);
     });
     wrap.append(card, opts, why);
     round.setHintTarget(() => good);
-    round.timeout(readAll, round.index === 0 ? 3600 : 400);
+    round.timeout(() => void readAll(), round.index === 0 ? 3600 : 400);
   },
 };

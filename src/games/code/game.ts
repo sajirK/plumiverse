@@ -58,7 +58,7 @@ export const codeGame: GameDef = {
     let running = false;
     const wait = (ms: number) => new Promise<void>((r) => round.timeout(r, ms));
     const main = h("div", { class: "co-main" });
-    const board = h("div", { class: "co-board", style: { gridTemplateColumns: `repeat(${g.w}, 1fr)` } });
+    const board = h("div", { class: "co-board", style: { gridTemplateColumns: `repeat(${g.w}, minmax(0, 1fr))` } });
     const walls = new Set(g.walls.map(([x, y]) => `${x},${y}`));
     const trees = ["🌳", "🌲"];
     for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) board.appendChild(h("div", { class: "co-tile" }, walls.has(`${x},${y}`) ? pick(trees) : x === g.goal[0] && y === g.goal[1] ? "🔋" : ""));

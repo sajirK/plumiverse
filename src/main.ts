@@ -8,7 +8,7 @@ import { who, home, trophies } from "./ui/screens/home";
 import { map, play } from "./ui/screens/play";
 import { parent, parentProfile, parentFamily } from "./ui/screens/parent";
 import { me } from "./ui/screens/me";
-import { loadManifest, unlockAudio } from "./audio/voice";
+import { loadManifest, unlockAudio, stop as stopVoice } from "./audio/voice";
 import { LANGS } from "./core/types";
 import { trackScreenView, type AppScreen } from "./ui/stats";
 
@@ -45,7 +45,27 @@ route(/^\/?$/, () => {
 declare global { interface Window { __app?: unknown } }
 if (import.meta.env.DEV) window.__app = { state, saveProfile, selectProfile, go };
 
+/** Pas de zoom par erreur : le double toucher est coupé par touch-action (CSS) sans ralentir les touchers rapides,
+ *  le pincement par les gestes iOS (qui ignore parfois user-scalable=no). */
+function lockZoom() {
+  for (const t of ["gesturestart", "gesturechange", "gestureend"]) document.addEventListener(t, (e) => e.preventDefault(), { passive: false });
+  // filet de sécurité pour les vieux iOS : 2e toucher rapide sur une zone qui n'est pas un bouton
+  let last = 0;
+  document.addEventListener("touchend", (e) => {
+    const now = Date.now(), t = e.target as HTMLElement | null;
+    if (now - last < 320 && !t?.closest("button, a, input, textarea, select, [role=button]")) e.preventDefault();
+    last = now;
+  }, { passive: false });
+  document.addEventListener("dblclick", (e) => e.preventDefault());
+  document.addEventListener("contextmenu", (e) => { if (!(e.target as HTMLElement)?.closest("input, textarea")) e.preventDefault(); });
+  document.addEventListener("touchmove", (e) => { if ((e as TouchEvent).touches.length > 1) e.preventDefault(); }, { passive: false });
+}
+
 async function boot() {
+  lockZoom();
+  // on quitte l'onglet ou l'appli : la voix se tait tout de suite
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stopVoice(); });
+  window.addEventListener("pagehide", () => stopVoice());
   await initState();
   if (state.current) applyProfileSettings(state.current);
   // sons générés : la langue de la page tout de suite, les autres ensuite (cours de langue)

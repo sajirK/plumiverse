@@ -54,7 +54,7 @@ export const melodieGame: GameDef = {
     const wait = (ms: number) => new Promise<void>((r) => round.timeout(r, ms));
     const ear = h("button", { class: "lg-ear big", "aria-label": "🔊" }, "👂");
     const dots = h("div", { class: "k-progress" });
-    const grid = h("div", { class: "me-pads", style: { gridTemplateColumns: `repeat(${p.pads <= 4 ? 2 : 3}, 1fr)` } });
+    const grid = h("div", { class: "me-pads", style: { gridTemplateColumns: `repeat(${p.pads <= 4 ? 2 : 3}, minmax(0, 1fr))` } });
     round.stage.appendChild(h("div", { class: "ca-wrap" }, ear, dots, grid));
     const showDots = () => { dots.innerHTML = seq.map((_, i) => `<span class="k-dot${i < pos ? " ok" : ""}"></span>`).join(""); };
     const pads = PADS.slice(0, p.pads).map((pd, i) => {

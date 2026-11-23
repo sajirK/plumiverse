@@ -81,7 +81,7 @@ export async function play([gameId, levelId]: string[]) {
   let extra = 0;
   const res = await runLevel({
     host, game: g, level: ref.level, ctx,
-    title: `${g.icon} ${tr(g.title)} · ${levelLabel(ref)}`,
+    title: g.free ? `${g.icon} ${tr(g.title)}` : `${g.icon} ${tr(g.title)} · ${levelLabel(ref)}`,
     onTick: (s) => {
       extra = s;
       const left = minutesLeft(p, s);

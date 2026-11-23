@@ -55,7 +55,7 @@ export const taupeGame: GameDef = {
     const rule = RULES.find((r) => r.id === p.rule);
     const meter = round.meter(rule ? "🔢" : "🐹", p.goal);
     const cols = p.holes === 6 ? 3 : p.holes === 12 ? 4 : 3;
-    const field = h("div", { class: "ta-field", style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } });
+    const field = h("div", { class: "ta-field", style: { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } });
     round.stage.appendChild(field);
     let score = 0, warnedBat = false;
     const holes = Array.from({ length: p.holes }, () => {

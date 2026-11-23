@@ -184,6 +184,10 @@ describe("voix", () => {
   });
   test("la meilleure voix du navigateur : jamais une autre langue, les voix naturelles d'abord", () => {
     expect(scoreVoice({ name: "Samantha", lang: "en-US", localService: true }, "fr")).toBe(-1);
+    // les voix « rigolotes » d'Apple ne passent jamais devant Thomas ou Audrey
+    expect(scoreVoice({ name: "Eddy (Français (France))", lang: "fr-FR", localService: true }, "fr")).toBeLessThan(scoreVoice({ name: "Thomas", lang: "fr-FR", localService: true }, "fr"));
+    expect(scoreVoice({ name: "Grandpa (French (France))", lang: "fr-FR", localService: true }, "fr")).toBeLessThan(scoreVoice({ name: "Google français", lang: "fr-FR", localService: false }, "fr"));
+    expect(scoreVoice({ name: "Audrey (Enhanced)", lang: "fr-FR", localService: true }, "fr")).toBeGreaterThan(scoreVoice({ name: "Thomas", lang: "fr-FR", localService: true }, "fr"));
     const good = scoreVoice({ name: "Amélie (Premium)", lang: "fr-FR", localService: true }, "fr");
     const bad = scoreVoice({ name: "Thomas", lang: "fr-FR", localService: true }, "fr");
     const silly = scoreVoice({ name: "Bad News", lang: "en-GB", localService: true }, "en");
