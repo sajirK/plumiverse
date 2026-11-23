@@ -48,6 +48,8 @@ async function playLevel(game, level) {
     let t = null;
     try { t = window.__kit?.target(); } catch (e) { robot.errors.push(`${game}/${level} target: ${e}`); }
     if (!t) continue;
+    if (t.__robotAuto) { t.__robotAuto(); continue; }
+    if (t.__robotSwipe) { const sw = t.__robotSwipe(); if (sw) { const [x1, y1, x2, y2] = sw; const pts = Array.from({ length: 7 }, (_, k) => [x1 + ((x2 - x1) * k) / 6, y1 + ((y2 - y1) * k) / 6]); trace(pts); gestures++; await wait(60); } continue; }
     if (t.__robotPath) { trace(t.__robotPath()); gestures++; await wait(80); continue; }
     if (t.__robotFill) t.__robotFill();
     if (t.isConnected && !t.disabled && !t.classList.contains("used")) { tap(t); gestures++; await wait(60); }

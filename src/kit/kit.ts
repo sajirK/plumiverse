@@ -42,6 +42,8 @@ export interface RoundApi {
   onCleanup(fn: () => void): void;
   /** Fin immédiate du niveau (jeux d'action) ; sinon la fin vient après la dernière manche. */
   end(): void;
+  /** Jauge d'objectif des jeux d'action (à la place des points de progression) : m.set(n). */
+  meter(icon: string, total: number): { set(n: number): void };
 }
 
 export interface RunOptions {
@@ -71,6 +73,7 @@ export function showHand(target: HintTarget) {
   const from = isDrag ? target.from : target;
   if (!(from instanceof Element) || !from.isConnected) return;
   const a = from.getBoundingClientRect();
+  if (!a.width && !a.height) return; // cible invisible (aide réservée au robot de test)
   const h = el("div", "k-hand" + (isDrag ? " k-hand-drag" : ""), "👆");
   h.style.left = a.left + a.width / 2 + "px";
   h.style.top = a.top + a.height / 2 + "px";
@@ -230,6 +233,18 @@ export function runLevel(o: RunOptions): Promise<LevelResult | null> {
       },
       onCleanup(fn) { cleanups.push(fn); },
       end: () => finish(),
+      meter(icon, total) {
+        progress.innerHTML = `<div class="k-meter"><span class="k-meter-icon">${icon}</span><span class="k-meter-track"><span class="k-meter-fill"></span></span><span class="k-meter-count">0/${total}</span></div>`;
+        const fill = progress.querySelector(".k-meter-fill") as HTMLElement, count = progress.querySelector(".k-meter-count") as HTMLElement, box = progress.querySelector(".k-meter") as HTMLElement;
+        return {
+          set(n: number) {
+            n = Math.max(0, Math.min(total, n));
+            fill.style.width = (n / total) * 100 + "%";
+            count.textContent = `${n}/${total}`;
+            box.classList.remove("k-meter-bump"); void box.offsetWidth; box.classList.add("k-meter-bump");
+          },
+        };
+      },
     });
 
     function nextRound(first = false) {
