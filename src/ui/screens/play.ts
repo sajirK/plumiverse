@@ -13,7 +13,7 @@ import { h, clear } from "../dom";
 import { footer, playerHeader, plume, stars, modal, toast } from "../parts";
 import { state, root, go, ctxFor, gamesFor, saveProfile, setTitle, allGames } from "../app";
 import { gameById } from "../../games";
-import { track } from "../stats";
+import { trackGameStarted, trackLevelFinished } from "../stats";
 import { burst } from "../../kit/kit";
 
 const levelLabel = (ref: LevelRef) => (ref.level.boss ? "👑 " + t("map.boss") : `${t("map.chapter", { n: ref.ci + 1 })} · ${ref.li + 1}`);
@@ -77,7 +77,7 @@ export async function play([gameId, levelId]: string[]) {
   const app = clear(root());
   const host = h("div", { class: "play" });
   app.appendChild(host);
-  track(`jeu/${g.id}/debut`);
+  trackGameStarted(g.id);
   let extra = 0;
   const res = await runLevel({
     host, game: g, level: ref.level, ctx,
@@ -104,7 +104,7 @@ async function endScreen(p: Profile, gameId: string, trk: Track, ref: LevelRef, 
   const tracks = Object.fromEntries(allGames().map((x) => [x.id, x.track(ctxFor(p))]));
   const newTrophies = checkTrophies(p, { tracks });
   await saveProfile(p);
-  track(`jeu/${gameId}/${ref.level.id}/fin/${res.stars}`);
+  if (res.stars > 0) trackLevelFinished(gameId, ref.level.id, res.stars);
   const after = playerLevel(p.xp).level;
   const little = bandOf(p) === "3-5";
   const bossFail = ref.level.boss && res.stars < 2;

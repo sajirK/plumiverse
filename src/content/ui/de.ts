@@ -113,7 +113,7 @@ export const de: Ui = {
     importDone: "Sicherung importiert: {n} Profil(e).",
     importError: "Diese Datei ist keine Plumiverse-Sicherung.",
     stats: "Plumiverse verbessern helfen (anonyme Statistik)",
-    statsHelp: "Nur anonyme Zähler (gespielte Spiele, geschaffte Levels, Altersgruppe, Sprache). Nie ein Name oder ein genaues Alter.",
+    statsHelp: "Wenn aktiviert: besuchte App-Bildschirme, Sprache, gestartete Spiele und abgeschlossene Level mit Sternen sowie aggregierte Browser-, System- und ungefähre Länderstatistiken von GoatCounter. Kein Name, keine Profil-ID, kein Alter und kein individueller Spielverlauf.",
     words: "{n} Wörter gelernt",
     chapter: "Kapitel {n} / {total}",
     played: "Gespielt",

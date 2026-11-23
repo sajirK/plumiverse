@@ -113,7 +113,7 @@ export const en: Ui = {
     importDone: "Backup imported: {n} profile(s).",
     importError: "This file is not a Plumiverse backup.",
     stats: "Help improve Plumiverse (anonymous statistics)",
-    statsHelp: "Only anonymous counters (games played, levels finished, age group, language). Never a name or an exact age.",
+    statsHelp: "When enabled: app screens viewed, language, games started, and completed levels with their stars, plus aggregated browser, system, and approximate country trends from GoatCounter. No name, profile ID, age, or individual play history.",
     words: "{n} words learnt",
     chapter: "Chapter {n} / {total}",
     played: "Played",

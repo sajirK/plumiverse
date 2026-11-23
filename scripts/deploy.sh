@@ -2,7 +2,7 @@
 # Construit Plumiverse et publie le dossier dist/ sur la branche gh-pages (GitHub Pages).
 set -e
 npm test
-npm run build
+VITE_GOATCOUNTER="${VITE_GOATCOUNTER:-sajirkhenissi}" npm run build
 touch dist/.nojekyll
 cd dist
 git init -q -b gh-pages

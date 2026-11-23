@@ -194,7 +194,12 @@ export function parentFamily() {
       } catch { msg.textContent = t("parent.importError"); }
     };
     const consent = h("button", { class: "switch" + (state.meta.statsConsent ? " on" : ""), role: "switch", "aria-checked": String(!!state.meta.statsConsent) }, h("span", {}));
-    consent.onclick = async () => { state.meta.statsConsent = !state.meta.statsConsent; await state.store.setMeta({ statsConsent: state.meta.statsConsent }); consent.classList.toggle("on", state.meta.statsConsent); };
+    consent.onclick = async () => {
+      state.meta.statsConsent = !state.meta.statsConsent;
+      await state.store.setMeta({ statsConsent: state.meta.statsConsent });
+      consent.classList.toggle("on", state.meta.statsConsent);
+      consent.setAttribute("aria-checked", String(state.meta.statsConsent));
+    };
     page.append(
       h("div", { class: "parent-top" }, h("button", { class: "round-btn", "aria-label": t("parent.back"), onclick: () => go("#/parent") }, "←"), h("h1", {}, "💾 " + t("parent.family"))),
       h("div", { class: "row" }, exp, imp, file), msg,

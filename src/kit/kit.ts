@@ -149,18 +149,32 @@ export function runLevel(o: RunOptions): Promise<LevelResult | null> {
     let idleTimer = 0;
     const started = performance.now();
     let ticked = 0;
-    const session = game.setup ? game.setup(level, ctx) : null;
+    let session: unknown;
+    try { session = game.setup ? game.setup(level, ctx) : null; }
+    catch (e) { console.error(`[kit] ${game.id}/${level.id} setup`, e); resolve(null); return; }
 
+    let visibleMs = 0;
+    let visibleSince: number | null = document.hidden ? null : started;
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (visibleSince !== null) visibleMs += performance.now() - visibleSince;
+        visibleSince = null;
+      } else if (!ended) visibleSince = performance.now();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     const tick = setInterval(() => { if (!document.hidden && !ended) { ticked++; o.onTick?.(ticked); } }, 1000);
     const cleanup = () => { cleanups.forEach((f) => { try { f(); } catch { /* rien */ } }); cleanups = []; document.querySelectorAll(".k-hand").forEach((h) => h.remove()); };
 
     const finish = (quit = false) => {
       if (ended) return;
       ended = true;
+      if (visibleSince !== null) visibleMs += performance.now() - visibleSince;
+      visibleSince = null;
       clearTimeout(idleTimer); clearInterval(tick); cleanup();
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pointerdown", onAnyInput, true);
       if (quit) { stopVoice(); resolve(null); return; }
-      resolve({ stars: starsFor(errors), errors, seconds: Math.round((performance.now() - started) / 1000) });
+      resolve({ stars: starsFor(errors), errors, seconds: Math.round(visibleMs / 1000) });
     };
 
     // retour : chez les tout-petits, il faut toucher 2 fois la maison (pas de sortie par erreur, mais visible et simple)
@@ -254,12 +268,13 @@ export function runLevel(o: RunOptions): Promise<LevelResult | null> {
       stage.innerHTML = "";
       if (!first) { stage.classList.remove("k-swap-in"); void stage.offsetWidth; stage.classList.add("k-swap-in"); }
       try { game.start(api(), level, ctx); }
-      catch (e) { console.error(`[kit] ${game.id}/${level.id}`, e); }
+      catch (e) { console.error(`[kit] ${game.id}/${level.id}`, e); finish(true); }
       armIdle();
     }
 
     window.__kit = { target: () => hintFn(), state: () => ({ index, rounds, errors, ended }) };
-    instruction = game.instruction(level, ctx);
+    try { instruction = game.instruction(level, ctx); }
+    catch (e) { console.error(`[kit] ${game.id}/${level.id} instruction`, e); finish(true); return; }
     say(instruction, lang);
     nextRound(true);
   });

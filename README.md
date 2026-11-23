@@ -29,8 +29,7 @@ GitHub Pages sur « GitHub Actions » (Settings → Pages).
 
 Avec un domaine personnalisé : `SITE=https://plumiverse.app BASE=/ npm run deploy`.
 
-Statistiques anonymes (facultatives) : créer un compte GoatCounter gratuit et construire avec `VITE_GOATCOUNTER=<code>`.
-Elles ne partent que si un parent les active dans l'espace parent.
+Statistiques globales GoatCounter (facultatives) : écrans visités dans l'app, jeux lancés, niveaux terminés et étoiles, sans identifiant de profil. Elles ne partent que si un parent les active dans l'espace parent. `npm run deploy` utilise le code du site `sajirkhenissi` ; remplacer avec `VITE_GOATCOUNTER=<code>` si besoin.
 
 ## Voix naturelles (Azure Neural, générées une fois)
 

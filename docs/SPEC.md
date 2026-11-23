@@ -150,7 +150,7 @@ export default defineGame({
 
 ### 3.5 Statistiques (GoatCounter) et vie privée
 
-- Événements anonymes : `jeu/ecrire/debut`, `jeu/ecrire/ch2-n4/fin/3`, `langue/apprend/de`, `age/6-8`, `interface/fr`, `version/3.0.0`. Jamais de prénom, ni d'âge exact, ni d'identifiant d'enfant.
+- Mesures anonymes actuelles : écrans consultés dans l'application, langue de l'interface à la création d'un profil, début d'un jeu, et fin d'un niveau avec le jeu, le niveau et les étoiles. Aucun prénom, âge ou identifiant de profil n'est envoyé. Ne jamais transmettre le hash complet : les écrans de profil parent sont tous regroupés sous `parent`. Ne pas ajouter d'identifiant stable ; la mesure distante reste globale.
 - **Désactivé par défaut**, activable dans l'espace parent (« Aider à améliorer Plumiverse ») : le plus prudent pour un public d'enfants. La page d'accueil publique (SEO, visiteurs) compte les visites sans cookie.
 - Pages « Confidentialité » et « Mentions légales » dans les 4 langues. (Ceci n'est pas un avis juridique.)
 

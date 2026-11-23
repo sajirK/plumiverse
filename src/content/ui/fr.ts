@@ -113,7 +113,7 @@ export const fr = {
     importDone: "Sauvegarde importée : {n} profil(s).",
     importError: "Ce fichier n'est pas une sauvegarde Plumiverse.",
     stats: "Aider à améliorer Plumiverse (statistiques anonymes)",
-    statsHelp: "Seulement des compteurs anonymes (jeux joués, niveaux finis, tranche d'âge, langue). Jamais de prénom ni d'âge exact.",
+    statsHelp: "Si activées : écrans de l'app consultés, langue, jeux lancés et niveaux terminés avec leurs étoiles, plus des tendances agrégées de navigateur, système et pays approximatif selon GoatCounter. Aucun prénom, identifiant de profil, âge ou parcours individuel.",
     words: "{n} mots appris",
     chapter: "Chapitre {n} / {total}",
     played: "Joué",

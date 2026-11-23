@@ -10,7 +10,7 @@ import { h, clear } from "../dom";
 import { plume } from "../parts";
 import { state, root, saveProfile, selectProfile, goToProfileLanguage, go, setTitle } from "../app";
 import { showHand } from "../../kit/kit";
-import { track } from "../stats";
+import { trackProfileCreated } from "../stats";
 
 const FLAGS: Record<Lang, string> = { fr: "🇫🇷", en: "🇬🇧", de: "🇩🇪", es: "🇪🇸" };
 
@@ -110,7 +110,7 @@ export async function onboarding() {
   const finish = async (p: ReturnType<typeof createProfile>) => {
     await saveProfile(p);
     await selectProfile(p);
-    track(`profil/nouveau/${p.uiLang}`);
+    trackProfileCreated(p.uiLang);
     const first = ageOf(p) <= 5 ? "#/play/couleurs" : "#/home";
     if (!goToProfileLanguage(p, first)) go(first);
   };

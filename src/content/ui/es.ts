@@ -113,7 +113,7 @@ export const es: Ui = {
     importDone: "Copia importada: {n} perfil(es).",
     importError: "Este archivo no es una copia de seguridad de Plumiverse.",
     stats: "Ayudar a mejorar Plumiverse (estadísticas anónimas)",
-    statsHelp: "Solo contadores anónimos (juegos, niveles terminados, franja de edad, idioma). Nunca un nombre ni una edad exacta.",
+    statsHelp: "Al activarlas: pantallas de la app visitadas, idioma, juegos iniciados y niveles terminados con sus estrellas, además de tendencias agregadas de navegador, sistema y país aproximado de GoatCounter. No se envían nombres, identificadores de perfil, edades ni historiales individuales.",
     words: "{n} palabras aprendidas",
     chapter: "Capítulo {n} / {total}",
     played: "Jugado",
