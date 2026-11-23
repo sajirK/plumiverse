@@ -92,7 +92,7 @@ export const toursGame: GameDef = {
       const b = h("div", { class: "to-block" }); b.style.background = c;
       pile.appendChild(b);
       drag(b, {
-        ghost: () => h("div", { class: "to-block", style: { background: c, width: "var(--b)", height: "var(--b)" } }),
+        ghost: () => { const w = getComputedStyle(round.stage).getPropertyValue("--b").trim() || "48px"; return h("div", { class: "to-block", style: { background: c, width: w, height: w } }); },
         enabled: () => !round.ended,
         onMove: (pt) => zone.classList.toggle("k-zone-hot", inside(zone, pt, 30)),
         onDrop: (pt) => { zone.classList.remove("k-zone-hot"); if (!inside(zone, pt, 30)) return false; add(c); return true; },

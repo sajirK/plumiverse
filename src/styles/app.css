@@ -591,7 +591,7 @@ body[data-band="12-14"] .game-card, body[data-band="12-14"] .lang-card, body[dat
 @keyframes cf-pop { 60% { transform: scale(1.35); opacity: 0.6; } 100% { transform: scale(0.2); opacity: 0; } }
 .cf-sky.drift .cf-balloon { animation: cf-drift var(--float, 6s) ease-in-out infinite alternate, k-in var(--t-slow) var(--ease-bounce) both; }
 @keyframes cf-drift { from { translate: -26px 10px; } to { translate: 26px -14px; } }
-.cf-zone { width: min(96vw, 900px); display: grid; grid-template-rows: 1fr 1fr; gap: 14px; flex: 1; min-height: 0; max-height: 640px; margin: auto; }
+.cf-zone { width: min(100%, 900px); display: grid; grid-template-rows: 1fr 1fr; gap: 14px; flex: 1; min-height: 0; max-height: 640px; margin: auto; }
 .cf-row { display: flex; justify-content: space-around; align-items: center; border-radius: var(--r-lg); flex-wrap: wrap; gap: 8px; }
 .cf-row:first-child { background: rgba(255,255,255,0.55); box-shadow: inset 0 4px 0 rgba(0,0,0,0.06); }
 .cf-shadow, .cf-piece { width: var(--sz); height: var(--sz); display: grid; place-items: center; }
@@ -712,3 +712,9 @@ body[data-band="12-14"] .game-card, body[data-band="12-14"] .lang-card, body[dat
 .li-read { font-size: clamp(46px, 11vmin, 80px); font-weight: 800; letter-spacing: 2px; display: flex; gap: 4px; }
 .li-read span { cursor: pointer; }
 .li-pic { font-size: clamp(54px, 12vmin, 84px); }
+.cf-row { flex-wrap: nowrap; justify-content: space-evenly; padding: 8px 0; gap: 4px; }
+.cf-row:first-child { overflow: visible; }
+@media (max-width: 600px) {
+  .k-title { white-space: normal; font-size: 16px; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .k-title .k-icon { font-size: 26px; }
+}

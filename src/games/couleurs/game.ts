@@ -175,7 +175,7 @@ export const couleursGame: GameDef = {
       const pool = p.pool === "easy" ? EASY_SHAPES : p.pool === "mid" ? Object.keys(SHAPES).slice(0, 8) : Object.keys(SHAPES);
       const b = shapeBoard(pool, p.pieces!, !!p.similar);
       const targets = h("div", { class: "cf-row" }), piecesEl = h("div", { class: "cf-row" });
-      round.stage.append(h("div", { class: "cf-zone", style: { "--sz": ["", "", "", "clamp(90px, 22vmin, 150px)", "clamp(80px, 19vmin, 130px)", "clamp(70px, 16vmin, 112px)"][p.pieces!] } }, targets, piecesEl));
+      round.stage.append(h("div", { class: "cf-zone", style: { "--sz": `min(${["", "", "", "clamp(90px, 22vmin, 150px)", "clamp(80px, 19vmin, 130px)", "clamp(70px, 16vmin, 112px)"][p.pieces!]}, calc((98vw - ${p.pieces! * 6}px) / ${p.pieces!}))` } }, targets, piecesEl));
       const shadowEls: Record<string, HTMLElement> = {}, pieceEls: Record<string, HTMLElement> = {};
       for (const n of b.shadows) { const s = h("div", { class: "cf-shadow" }); s.innerHTML = shapeSvg(n, "#3b2a4d"); shadowEls[n] = s; targets.appendChild(s); }
       let left = b.pieces.length;
@@ -186,7 +186,7 @@ export const couleursGame: GameDef = {
         const under = (pt: { x: number; y: number }) => Object.entries(shadowEls).find(([, s]) => !s.classList.contains("filled") && inside(s, pt, 24));
         drag(el, {
           enabled: () => !round.ended && !el.classList.contains("placed"),
-          ghost: () => { const g = h("div", { style: { width: "var(--sz)", height: "var(--sz)" } }); g.innerHTML = shapeSvg(n, color); return g; },
+          ghost: () => { const w = el.offsetWidth + "px"; const g = h("div", { style: { width: w, height: w } }); g.innerHTML = shapeSvg(n, color); return g; },
           onMove: (pt) => { Object.values(shadowEls).forEach((s) => s.classList.remove("hot")); under(pt)?.[1].classList.add("hot"); },
           onDrop: (pt) => {
             Object.values(shadowEls).forEach((s) => s.classList.remove("hot"));
