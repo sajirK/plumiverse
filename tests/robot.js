@@ -25,7 +25,7 @@ const wait = (ms) => new Promise((r) => {
 
 function tap(el) {
   const r = el.getBoundingClientRect(), o = { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, bubbles: true, pointerId: 5 };
-  el.dispatchEvent(new PointerEvent("pointerdown", o)); el.dispatchEvent(new PointerEvent("pointerup", o)); el.click();
+  el.dispatchEvent(new PointerEvent("pointerdown", o)); el.dispatchEvent(new PointerEvent("pointerup", o)); if (el.click) el.click(); else el.dispatchEvent(new MouseEvent("click", o));
 }
 function trace(pts) {
   const cv = document.querySelector("canvas"); const ev = (k, [x, y]) => cv.dispatchEvent(new PointerEvent(k, { clientX: x, clientY: y, bubbles: true, pointerId: 8 }));

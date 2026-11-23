@@ -26,7 +26,7 @@ export interface RoundApi {
   boost: boolean;
   /** Vrai quand le niveau est terminé (ou quitté). */
   readonly ended: boolean;
-  say(text: string, lang?: Lang): Promise<void>;
+  say(text: string, lang?: Lang, opts?: { interrupt?: boolean }): Promise<void>;
   /** Consigne de la manche (redite sur 🔊 et quand l'enfant hésite). */
   instruct(text: string, lang?: Lang): void;
   win(el?: Element | null, phrase?: string, opts?: { delay?: number; praise?: boolean }): void;
@@ -191,7 +191,7 @@ export function runLevel(o: RunOptions): Promise<LevelResult | null> {
       assist: wrongStreak >= 2,
       boost: fastStreak >= 4,
       get ended() { return ended; },
-      say: (text, l = lang) => say(text, l),
+      say: (text, l = lang, o) => say(text, l, o),
       // la 1re consigne passe après la présentation du niveau, sans la couper
       instruct(text, l = lang) { instruction = text; instructionLang = l; say(text, l, { interrupt: index > 0 || ticked > 2 }); },
       win(target, phrase = "", { delay = 1300, praise = true } = {}) {
