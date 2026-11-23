@@ -55,6 +55,7 @@ export const de: Ui = {
     done: "Geschafft!",
   },
   kit: {
+    leave: "Nach Hause? Tipp noch einmal auf das Haus.",
     home: "Zurück",
     repeat: "Nochmal hören",
     mute: "Ton",

@@ -24,6 +24,8 @@ export interface RoundApi {
   assist: boolean;
   /** Vrai après 4 réussites rapides de suite : le jeu peut corser un peu. */
   boost: boolean;
+  /** Vrai quand le niveau est terminé (ou quitté). */
+  readonly ended: boolean;
   say(text: string, lang?: Lang): Promise<void>;
   /** Consigne de la manche (redite sur 🔊 et quand l'enfant hésite). */
   instruct(text: string, lang?: Lang): void;
@@ -78,6 +80,22 @@ export function showHand(target: HintTarget) {
     requestAnimationFrame(() => requestAnimationFrame(() => { h.style.left = b.left + b.width / 2 + "px"; h.style.top = b.top + b.height / 2 + "px"; }));
   }
   setTimeout(() => h.remove(), isDrag ? 1600 : 2200);
+}
+
+// ---------------------------------------------------------------- bouton à confirmer
+/**
+ * Bouton « sûr » pour les tout-petits : le 1er toucher le fait grossir avec un « ? » (et la voix demande),
+ * le 2e toucher dans les 3 secondes déclenche l'action. Sans `ask`, un seul toucher suffit.
+ */
+export function confirmTap(btn: HTMLElement, action: () => void, ask: (() => void) | null) {
+  let armed = 0;
+  btn.addEventListener("click", () => {
+    if (!ask) { sfx.tap(); action(); return; }
+    if (armed) { clearTimeout(armed); armed = 0; btn.classList.remove("k-confirm"); sfx.tap(); action(); return; }
+    sfx.pop(); ask();
+    btn.classList.add("k-confirm");
+    armed = window.setTimeout(() => { armed = 0; btn.classList.remove("k-confirm"); }, 3000);
+  });
 }
 
 // ---------------------------------------------------------------- particules (DOM, légères)
@@ -142,13 +160,8 @@ export function runLevel(o: RunOptions): Promise<LevelResult | null> {
       resolve({ stars: starsFor(errors), errors, seconds: Math.round((performance.now() - started) / 1000) });
     };
 
-    // retour : appui long d'une seconde chez les tout-petits (pas de sortie par erreur)
-    let holdTimer = 0;
-    if (little) {
-      back.addEventListener("pointerdown", () => { back.classList.add("k-hold"); holdTimer = window.setTimeout(() => finish(true), 1000); });
-      const cancel = () => { back.classList.remove("k-hold"); clearTimeout(holdTimer); };
-      back.addEventListener("pointerup", cancel); back.addEventListener("pointerleave", cancel);
-    } else back.onclick = () => finish(true);
+    // retour : chez les tout-petits, il faut toucher 2 fois la maison (pas de sortie par erreur, mais visible et simple)
+    confirmTap(back, () => finish(true), little ? () => say(D.kit.leave, lang) : null);
     repeat.onclick = () => { sfx.tap(); if (instruction) say(instruction, instructionLang); showHand(hintFn()); };
 
     const armIdle = () => {
@@ -174,6 +187,7 @@ export function runLevel(o: RunOptions): Promise<LevelResult | null> {
       stage, level, params: level.params, index, rounds, session, ctx,
       assist: wrongStreak >= 2,
       boost: fastStreak >= 4,
+      get ended() { return ended; },
       say: (text, l = lang) => say(text, l),
       // la 1re consigne passe après la présentation du niveau, sans la couper
       instruct(text, l = lang) { instruction = text; instructionLang = l; say(text, l, { interrupt: index > 0 || ticked > 2 }); },

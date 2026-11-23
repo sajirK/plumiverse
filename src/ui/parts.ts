@@ -6,6 +6,7 @@ import { bandOf, displayName } from "../core/profile";
 import { h } from "./dom";
 import { go, state, switchLanguage } from "./app";
 import { sfx } from "../audio/sfx";
+import { confirmTap } from "../kit/kit";
 
 /** Lien LinkedIn de l'auteur (à confirmer). */
 export const LINKEDIN = "https://www.linkedin.com/search/results/all/?keywords=Sajir%20Khenissi";
@@ -40,14 +41,10 @@ export function footer(): HTMLElement {
   );
 }
 
-/** Bouton qui demande un appui long (1 s) chez les tout-petits, pour ne pas sortir par erreur. */
-export function holdButton(label: string, cls: string, onDone: () => void, needHold: boolean): HTMLButtonElement {
+/** Bouton qui demande 2 touchers chez les tout-petits (pour ne pas sortir par erreur), 1 seul sinon. */
+export function holdButton(label: string, cls: string, onDone: () => void, needConfirm: boolean): HTMLButtonElement {
   const b = h("button", { class: cls, "aria-label": label }, label.length <= 2 ? label : "") as HTMLButtonElement;
-  if (!needHold) { b.onclick = () => { sfx.tap(); onDone(); }; return b; }
-  let timer = 0;
-  b.addEventListener("pointerdown", () => { b.classList.add("k-hold"); timer = window.setTimeout(() => { b.classList.remove("k-hold"); onDone(); }, 1000); });
-  const cancel = () => { b.classList.remove("k-hold"); clearTimeout(timer); };
-  b.addEventListener("pointerup", cancel); b.addEventListener("pointerleave", cancel);
+  confirmTap(b, onDone, needConfirm ? () => {} : null);
   return b;
 }
 

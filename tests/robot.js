@@ -12,7 +12,16 @@ const sched = (() => {
 })();
 const realClear = window.clearTimeout.bind(window);
 const SPEED = 20;
-const wait = (ms) => new Promise((r) => sched.set(r, ms));
+// attente robuste : minuterie accélérée OU filet de sécurité par messages (si une minuterie se perd, on ne reste jamais bloqué)
+const wait = (ms) => new Promise((r) => {
+  let done = false;
+  const fin = () => { if (!done) { done = true; r(); } };
+  sched.set(fin, ms);
+  const end = performance.now() + ms / SPEED + 250;
+  const ch = new MessageChannel();
+  ch.port1.onmessage = () => { if (done) return; if (performance.now() >= end) fin(); else ch.port2.postMessage(0); };
+  ch.port2.postMessage(0);
+});
 
 function tap(el) {
   const r = el.getBoundingClientRect(), o = { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, bubbles: true, pointerId: 5 };
@@ -23,7 +32,7 @@ function trace(pts) {
   ev("pointerdown", pts[0]); pts.forEach((p) => ev("pointermove", p)); ev("pointerup", pts[pts.length - 1]);
 }
 
-const robot = (window.robot = { log: [], errors: [], done: true, accelerate: true });
+const robot = (window.robot = { log: [], errors: [], done: true, accelerate: true, sched });
 
 async function playLevel(game, level) {
   location.hash = `#/play/${game}/${level}`;

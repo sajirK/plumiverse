@@ -4,8 +4,14 @@ import { couleursGame } from "./couleurs/game";
 import { ecrireGame } from "./ecrire/game";
 import { calculGame } from "./calcul/game";
 import { LANGUAGE_GAMES } from "./langue/game";
+import { memoireGame } from "./memoire/game";
+import { suitesGame } from "./suites/game";
+import { intrusGame } from "./intrus/game";
+import { codeGame } from "./code/game";
+import { horlogeGame } from "./horloge/game";
+import { monnaieGame } from "./monnaie/game";
 
-export const GAMES: GameDef[] = [...LANGUAGE_GAMES, couleursGame, ecrireGame, calculGame];
+export const GAMES: GameDef[] = [...LANGUAGE_GAMES, couleursGame, ecrireGame, calculGame, memoireGame, suitesGame, intrusGame, codeGame, horlogeGame, monnaieGame];
 
 export const gameById = (id: string) => GAMES.find((g) => g.id === id);
 

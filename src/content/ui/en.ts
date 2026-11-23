@@ -55,6 +55,7 @@ export const en: Ui = {
     done: "Completed!",
   },
   kit: {
+    leave: "Going home? Tap the house again.",
     home: "Back",
     repeat: "Listen again",
     mute: "Sound",

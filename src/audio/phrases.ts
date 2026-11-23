@@ -28,6 +28,7 @@ function phrases(lang: Lang): Set<string> {
   // jeux : consignes de niveau, titres, questions
   for (const g of GAMES) {
     add(g.title[lang]);
+    for (const x of g.speech?.(lang) ?? []) add(x);
     const trk = g.track({ profile: { learning: ["fr", "en", "de", "es"] } as never, age: 8, band: "6-8", lang });
     for (const c of trk.chapters) for (const l of c.levels) for (const band of ["3-5", "6-8", "9-11", "12-14"] as const) add(g.instruction(l, { profile: {} as never, age: 8, band, lang }));
   }

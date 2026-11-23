@@ -55,6 +55,7 @@ export const es: Ui = {
     done: "¡Terminado!",
   },
   kit: {
+    leave: "¿Volvemos? Toca otra vez la casa.",
     home: "Volver",
     repeat: "Escuchar otra vez",
     mute: "Sonido",

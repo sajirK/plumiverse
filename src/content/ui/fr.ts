@@ -55,6 +55,7 @@ export const fr = {
     done: "Terminé !",
   },
   kit: {
+    leave: "On rentre ? Touche encore la maison.",
     home: "Retour",
     repeat: "Réécouter",
     mute: "Son",

@@ -29,6 +29,8 @@ export interface GameDef {
   instruction(level: LevelDef, ctx: GameCtx): string;
   /** Prépare les données d'un niveau (tirées une fois pour toutes les manches). */
   setup?(level: LevelDef, ctx: GameCtx): unknown;
+  /** Phrases que le jeu peut dire en plus de ses consignes (pour générer les voix à l'avance). */
+  speech?(lang: Lang): string[];
   /** Construit une manche. */
   start(round: RoundApi, level: LevelDef, ctx: GameCtx): void;
 }

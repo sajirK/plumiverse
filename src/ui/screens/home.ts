@@ -48,24 +48,13 @@ export function home() {
   const page = h("main", { class: `page home band-${band}` });
   app.append(playerHeader(p), page, footer());
 
-  if (band === "3-5") {
-    // L'île : 6 bulles maximum, des images, Plume au milieu. Toucher = jouer (le bon niveau est choisi tout seul).
-    const age = ageOf(p);
-    const fit = games.filter((g) => age >= g.ages[0] && age <= g.ages[1]).slice(0, 6);
-    const island = h("div", { class: "island" }, plume("m", "dance"));
-    fit.forEach((g, i) => {
-      const b = h("button", { class: `bubble b${i}`, "aria-label": tr(g.title) }, h("span", {}, g.icon));
-      b.onclick = () => { sfx.pop(); say(tr(g.title), state.pageLang); go(`#/play/${g.id}`); };
-      island.appendChild(b);
-    });
-    page.append(island);
-    say(t("home.pickGame"), state.pageLang);
-    return;
-  }
+  const little = band === "3-5";
+  if (little) page.append(h("div", { class: "little-head" }, plume("m", "dance"), h("p", { class: "little-say" }, t("home.pickGame"))));
+  else page.append(h("h1", { class: "hello" }, t("home.hi", { name: displayName(p) })));
+  if (little) say(t("home.pickGame"), state.pageLang);
 
-  page.append(h("h1", { class: "hello" }, t("home.hi", { name: displayName(p) })));
-
-  // Quête du jour
+  // Quête du jour (une suggestion : l'enfant reste libre de tout choisir dans le catalogue)
+  if (!little) {
   const quest = dailyQuest(p, games, ctx);
   const allDone = quest.length > 0 && quest.every((q) => questDone(p, q));
   const qbox = h("section", { class: "quest" }, h("h2", {}, (allDone ? "🏅 " : "🗺️ ") + (allDone ? t("home.questDone") : t("home.quest"))));
@@ -97,25 +86,32 @@ export function home() {
     }
     page.append(h("section", {}, h("h2", {}, "🌍 " + t("home.languages")), row));
   }
+  }
 
-  // Catalogue : par catégorie, filtré par âge
+  // Catalogue complet : tous les jeux, l'enfant choisit. Filtres : catégorie (icônes) et âge (« Tous » par défaut).
   const age = ageOf(p);
-  let filterAge = true;
+  let filterAge = false;
   let cat: Category | "all" = "all";
-  const chips = h("div", { class: "chips" });
-  const grid = h("div", { class: "game-grid" });
-  const cats = CATEGORIES.filter((c) => c !== "langues" && games.some((g) => g.category === c));
+  const chips = h("div", { class: "chips" + (little ? " big" : "") });
+  const grid = h("div", { class: "game-grid" + (little ? " little" : "") });
+  const cats = CATEGORIES.filter((c) => games.some((g) => g.category === c));
+  const fits = (g: GameDef) => age >= g.ages[0] && age <= g.ages[1];
   const renderGrid = () => {
     clear(chips); clear(grid);
-    const ageChip = h("button", { class: "chip" + (filterAge ? " on" : "") }, filterAge ? "👤 " + t("home.forMe") : "🌐 " + t("home.all"));
-    ageChip.onclick = () => { filterAge = !filterAge; sfx.tap(); renderGrid(); };
-    chips.appendChild(ageChip);
     for (const c of ["all", ...cats] as const) {
-      const b = h("button", { class: "chip" + (cat === c ? " on" : "") }, c === "all" ? t("home.all") : t(`cat.${c}`));
-      b.onclick = () => { cat = c as Category | "all"; sfx.tap(); renderGrid(); };
+      const label = c === "all" ? t("home.all") : t(`cat.${c}`);
+      const b = h("button", { class: "chip" + (cat === c ? " on" : ""), "aria-label": label }, CAT_ICON[c], little ? null : " " + label);
+      b.onclick = () => { cat = c as Category | "all"; sfx.tap(); if (little) say(label, state.pageLang); renderGrid(); };
       chips.appendChild(b);
     }
-    const list = games.filter((g) => g.category !== "langues" && (cat === "all" || g.category === cat) && (!filterAge || (age >= g.ages[0] && age <= g.ages[1])));
+    if (!little) {
+      const ageChip = h("button", { class: "chip age" + (filterAge ? " on" : "") }, "🎂 " + t("home.forMe"));
+      ageChip.onclick = () => { filterAge = !filterAge; sfx.tap(); renderGrid(); };
+      chips.appendChild(ageChip);
+    }
+    const list = games
+      .filter((g) => (cat === "all" || g.category === cat) && (!filterAge || fits(g)))
+      .sort((a, b) => Number(fits(b)) - Number(fits(a)));
     if (!list.length) grid.appendChild(h("p", { class: "muted" }, t("home.empty")));
     for (const g of list) grid.appendChild(gameCard(g));
   };
@@ -123,18 +119,20 @@ export function home() {
     const trk = g.track(ctx), gp = getGameProgress(p, g.id, trk);
     const done = trk.chapters.filter((c) => isChapterDone(gp, c)).length;
     const cur = continueLevel(p, gp, trk).chapter;
-    const b = h("button", { class: `game-card cat-${g.category}` },
+    const b = h("button", { class: `game-card cat-${g.category}` + (fits(g) ? " fits" : ""), "aria-label": tr(g.title) },
       g.isNew ? h("span", { class: "new" }, t("home.newBadge")) : null,
       h("span", { class: "game-icon" }, g.icon),
       h("span", { class: "game-title" }, tr(g.title)),
-      h("span", { class: `tier tier-${cur.tier}` }, t(`tier.${cur.tier}`)),
+      little ? null : h("span", { class: `tier tier-${cur.tier}` }, t(`tier.${cur.tier}`)),
       h("span", { class: "game-prog" }, h("span", { style: { width: `${Math.round((done / trk.chapters.length) * 100)}%` } })));
-    b.onclick = () => { sfx.tap(); go(`#/game/${g.id}`); };
+    b.onclick = () => { sfx.tap(); if (little) say(tr(g.title), state.pageLang); go(little ? `#/play/${g.id}` : `#/game/${g.id}`); };
     return b;
   };
-  page.append(h("section", {}, h("h2", {}, "🎮 " + t("home.games")), chips, grid));
+  page.append(h("section", {}, little ? null : h("h2", {}, "🎮 " + t("home.games")), chips, grid));
   renderGrid();
 }
+
+const CAT_ICON: Record<Category | "all", string> = { all: "⭐", langues: "🌍", "lire-ecrire": "✏️", maths: "🔢", logique: "🧩", sciences: "🔬", "histoire-geo": "🏛️", emotions: "💛", arcade: "🎮", creer: "🎨" };
 
 // ---------------------------------------------------------------- Trophées
 export function trophies() {
